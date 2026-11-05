@@ -1,0 +1,1521 @@
+<!doctype html>
+<html lang="fr" data-fr-scheme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kanban DSFR</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.12.1/dist/dsfr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.12.1/dist/utility/icons/icons.min.css">
+<style>
+  html, body { height: 100%; }
+  body { margin: 0; display: flex; flex-direction: column; overflow: hidden;
+         background: var(--background-alt-grey, #f6f6f6); color: var(--text-default-grey, #3a3a3a); }
+  .kb-bar { display: flex; align-items: center; gap: .75rem; padding: .5rem 1rem; background: #fff;
+            border-bottom: 1px solid var(--border-default-grey, #ddd); }
+  .kb-bar .kb-title { font-weight: 700; font-size: 1rem; color: var(--text-title-grey, #161616); margin: 0; }
+  .kb-bar .kb-spacer { flex: 1; }
+  .kb-bar input[type=search] { max-width: 260px; }
+  .kb-board { flex: 1; overflow: auto; display: flex; gap: 1rem; padding: 1rem; align-items: flex-start; }
+  .kb-empty { margin: auto; text-align: center; padding: 2rem; }
+
+  .kb-col { flex: 0 0 290px; max-height: 100%; display: flex; flex-direction: column; border-radius: 4px;
+            background: var(--col-bg); border-top: 4px solid var(--col-bar); position: relative; }
+  .kb-col-head { display: flex; align-items: center; gap: .5rem; padding: .625rem .75rem; }
+  .kb-col-body { padding-bottom: .75rem !important; }
+  .kb-modal-head input.fr-input { font-size: 1.125rem; font-weight: 700; flex: 1; }
+  .kb-col-name { font-weight: 700; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+                 color: var(--text-title-grey, #161616); }
+  .kb-count { background: #fff; border-radius: 1rem; padding: 0 .5rem; font-size: .75rem; font-weight: 700; line-height: 1.5rem; }
+  .kb-col-body { padding: 0 .5rem .5rem; overflow-y: auto; display: flex; flex-direction: column; gap: .5rem; min-height: 3rem; flex: 1; }
+  .kb-col-body.drag-over { outline: 2px dashed var(--col-bar); outline-offset: -4px; border-radius: 4px; }
+
+  .kb-card { background: #fff; border-radius: 4px; padding: .75rem; cursor: grab;
+             box-shadow: 0 0 0 1px var(--border-default-grey, #ddd); }
+  .kb-card:hover { box-shadow: 0 0 0 1px var(--text-action-high-blue-france, #000091), 0 2px 6px rgba(0,0,0,.12); }
+  .kb-card.dragging { opacity: .4; }
+  .kb-card-title { margin: 0 0 .25rem; font-size: 1rem; line-height: 1.4; font-weight: 700; color: var(--text-title-grey, #161616); }
+  .kb-fields { display: flex; flex-direction: column; gap: .5rem; margin-top: .5rem; font-size: .875rem; }
+  .kb-f { display: block; }
+  .kb-f-label { color: var(--text-mention-grey, #666); font-size: .75rem; line-height: 1.25rem; }
+  .kb-f-val { line-height: 1.5rem; }
+  .kb-link { word-break: break-all; }
+  .kb-check { width: 1rem; height: 1rem; accent-color: var(--text-action-high-blue-france, #000091); vertical-align: middle; }
+  .kb-cell { margin-bottom: 1rem; min-width: 0; position: relative; }
+  .kb-cell-label { display: flex; align-items: center; gap: .3rem; font-size: .6875rem; font-weight: 700; color: var(--text-mention-grey, #666); text-transform: uppercase; letter-spacing: .07em; margin-bottom: .25rem; }
+  .kb-emoji { font-style: normal; text-transform: none; letter-spacing: 0; }
+  .kb-val { font-size: .875rem; line-height: 1.5rem; white-space: pre-wrap; }
+  .kb-empty-val { display: inline-block; padding: 1px 8px; background: var(--background-contrast-error, #ffe9e9); border: 1px solid var(--border-default-error, #ce0500); border-radius: 4px; color: var(--text-default-error, #ce0500); font-size: .75rem; font-style: italic; }
+  .kb-ro .kb-ic { display: none; }
+  .kb-cell { container-type: inline-size; container-name: cell; }
+  /* champ étroit (⅓) : l'étiquette « Formule » / « Lecture seule » devient une petite icône pour ne pas coller au champ voisin */
+  @container cell (max-width: 280px) { .kb-ro .kb-tx { display: none; } .kb-ro .kb-ic { display: inline; } .kb-ro { padding: 0 4px; } }
+  .kb-ro { margin-left: auto; flex-shrink: 0; font-size: .625rem; font-weight: 600; letter-spacing: .05em; color: #929292; background: #f0f0f0; border: 1px solid #ddd; border-radius: 3px; padding: 0 5px; text-transform: uppercase; }
+  .kb-info { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; background: #929292; color: #fff; font-size: 9px; font-style: normal; font-weight: 700; letter-spacing: 0; text-transform: none; cursor: default; position: relative; }
+  .kb-info:hover, .kb-info:focus { background: #000091; outline: none; }
+  .kb-info::after { content: attr(data-tip); display: none; position: absolute; left: 0; top: calc(100% + 6px); width: max-content; max-width: 260px; background: #2b2b2b; color: #fff; padding: 7px 10px; border-radius: 6px; font-size: .75rem; font-weight: 400; line-height: 1.5; text-transform: none; white-space: pre-wrap; z-index: 70; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+  .kb-info:hover::after, .kb-info:focus::after { display: block; }
+  .kb-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+  .kb-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 10px; font-size: .75rem; line-height: 1.25rem; }
+  .kb-x { border: 0; background: none; cursor: pointer; color: inherit; opacity: .7; font-size: .875rem; line-height: 1; padding: 0; }
+  .kb-x:hover { opacity: 1; }
+  .kb-dd { position: relative; }
+  .kb-dd-trigger { display: flex; align-items: center; justify-content: space-between; gap: .5rem; width: 100%; min-height: 2.5rem; padding: .25rem .75rem; background: #eee; border: 0; border-bottom: 2px solid #3a3a3a; border-radius: .25rem .25rem 0 0; cursor: pointer; text-align: left; }
+  .kb-chev2 { color: #666; font-size: .75rem; }
+  .kb-plus { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #000091; background: var(--background-alt-blue-france, #f5f5fe); color: #000091; font-size: .875rem; line-height: 1; cursor: pointer; padding: 0; }
+  .kb-plus:hover { background: #000091; color: #fff; }
+  .kb-dd-list { display: none; position: absolute; top: calc(100% + 4px); left: 0; min-width: 12rem; max-width: 100%; max-height: 14rem; overflow-y: auto; z-index: 60; background: #fff; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 4px 16px rgba(0,0,0,.14); padding: 4px; }
+  .kb-dd.kb-open > .kb-dd-list, .kb-ref .kb-dd:focus-within > .kb-dd-list { display: block; }
+  .kb-dd-item { display: block; width: 100%; text-align: left; border: 0; background: none; cursor: pointer; padding: 5px 8px; border-radius: 2px; font-size: .8125rem; }
+  .kb-dd-item:hover { background: #f6f6f6; }
+  .kb-dd-none { padding: 8px 10px; color: #929292; font-size: .75rem; }
+  .kb-ref .kb-tags { margin-bottom: .25rem; }
+  .kb-numwrap { display: flex; align-items: center; gap: .5rem; }
+  .kb-unit { color: #666; font-size: .875rem; }
+  .kb-att { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; background: #ececfe; color: #000091; font-size: .75rem; font-weight: 600; }
+  .kb-att-name { border: 0; background: none; color: inherit; cursor: pointer; text-decoration: underline; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0; }
+  .kb-att-wrap { display: flex; flex-direction: column; align-items: flex-start; gap: .5rem; }
+  .kb-auto { resize: none; overflow: hidden; }
+  .kb-opts { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: flex-end; background: var(--background-alt-grey, #f6f6f6); border-radius: 4px; padding: .5rem .75rem; margin: 0 0 .5rem; font-size: .75rem; }
+  .kb-opts label { display: flex; flex-direction: column; gap: 2px; }
+  .kb-emoji-in { width: 4rem; }
+  .kb-emojis { display: flex; flex-wrap: wrap; gap: 2px; flex-basis: 100%; }
+  .kb-emoji-btn { border: 1px solid transparent; background: none; cursor: pointer; font-size: 1rem; padding: 2px 4px; border-radius: 4px; }
+  .kb-emoji-btn:hover { background: #e3e3fd; }
+  .kb-opt-check { flex-direction: row !important; align-items: center; gap: .4rem !important; flex-basis: 100%; }
+  .kb-opt-tags { display: flex; align-items: center; gap: .4rem; flex-basis: 100%; }
+  .kb-swatch { border: 2px solid transparent; border-radius: 6px; width: 28px; height: 26px; font-size: .6875rem; font-weight: 700; cursor: pointer; }
+  .kb-swatch.on { border-color: #161616; }
+  .kb-badges { display: flex; flex-wrap: wrap; gap: .25rem; }
+  .kb-badge { display: inline-block; border-radius: .25rem; padding: 0 .5rem; font-size: .75rem; font-weight: 700;
+              line-height: 1.5rem; text-transform: uppercase; letter-spacing: .02em; }
+
+  .kb-overlay { position: fixed; inset: 0; background: rgba(22,22,22,.64); z-index: 50; display: none;
+                align-items: center; justify-content: center; padding: 1rem; }
+  .kb-overlay.open { display: flex; }
+  .kb-modal { background: #fff; width: min(720px, 100%); max-height: 100%; display: flex; flex-direction: column; border-radius: 4px; }
+  .kb-modal-head { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-default-grey, #ddd); }
+  .kb-modal-head h2 { margin: 0; flex: 1; font-size: 1.25rem; }
+  .kb-modal-head { align-items: center; }
+  .kb-modal-body { padding: 1rem 1.5rem; overflow-y: auto; display: grid; grid-template-columns: repeat(6, 1fr); gap: 0 1.5rem; align-content: start; flex: 1; }
+  .kb-modal-body .fr-input-group { margin-bottom: 1rem; }
+  .kb-modal-body > *, .kb-sec-body > * { grid-column: span 3; min-width: 0; }
+  .kb-modal-body .kb-full, .kb-sec-body .kb-full { grid-column: 1 / -1; }
+  .kb-modal-body .kb-w-third, .kb-sec-body .kb-w-third { grid-column: span 2; }
+  .kb-modal-body .kb-w-two, .kb-sec-body .kb-w-two { grid-column: span 4; }
+  .kb-wsel { font-size: .75rem; border: 1px solid #ddd; border-radius: 4px; background: #fff; padding: 1px 4px; }
+  .kb-modal-foot { padding: 1rem 1.5rem; border-top: 1px solid var(--border-default-grey, #ddd); display: flex; justify-content: flex-end; gap: .75rem; }
+  .kb-checks { display: flex; flex-wrap: wrap; gap: .25rem 1rem; max-height: 9rem; overflow-y: auto; }
+  .kb-checks label { display: flex; gap: .375rem; align-items: center; font-size: .875rem; }
+
+  .kb-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(400px, 100%); background: #fff; z-index: 40;
+               box-shadow: -4px 0 16px rgba(0,0,0,.2); transform: translateX(105%); transition: transform .2s; overflow-y: auto; }
+  .kb-drawer.open { transform: none; }
+  .kb-drawer section { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-default-grey, #ddd); }
+  .kb-drawer h3 { font-size: .9375rem; margin: 0 0 .75rem; }
+  .kb-row { display: flex; gap: .375rem; align-items: center; margin-bottom: .375rem; }
+  .kb-row .kb-row-name { flex: 1; font-size: .875rem; overflow: hidden; text-overflow: ellipsis; }
+  .kb-row select { width: auto; }
+  .kb-row { border-radius: 4px; padding: .125rem .25rem; background: #fff; }
+  .kb-grip { cursor: grab; font-size: 1.25rem; line-height: 1; color: var(--text-mention-grey, #666); padding: 0 .25rem; user-select: none; }
+  .kb-row:hover .kb-grip { color: var(--text-action-high-blue-france, #000091); }
+  .row-dragging { opacity: .4; }
+  .drop-before { box-shadow: 0 -3px 0 var(--text-action-high-blue-france, #000091); }
+  .drop-after { box-shadow: 0 3px 0 var(--text-action-high-blue-france, #000091); }
+  .drop-left { box-shadow: -3px 0 0 var(--text-action-high-blue-france, #000091); }
+  .drop-right { box-shadow: 3px 0 0 var(--text-action-high-blue-france, #000091); }
+
+  /* popup : mise en page */
+  .kb-heading { margin: .5rem 0 .75rem; font-size: 1.125rem; line-height: 1.5; color: var(--text-title-grey, #161616); }
+  .kb-divider { border: 0; border-top: 1px solid var(--border-default-grey, #ddd); margin: .5rem 0 1rem; padding: 0; }
+  .kb-section { margin-bottom: 1rem; }
+  .kb-sec-title { margin: 0 0 .5rem; font-size: 1rem; line-height: 1.5rem; }
+  .kb-sec-toggle { display: block; width: 100%; text-align: left; background: none; border: 0; cursor: pointer; padding: 0 0 .5rem;
+                   font: inherit; font-weight: 700; font-size: 1.0625rem; color: var(--text-title-grey, #161616); }
+  .kb-chev { display: inline-block; width: 1.25rem; color: var(--text-action-high-blue-france, #000091); }
+  .kb-sec-body { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0 1.5rem; padding: 1rem 1rem 0; border-radius: 4px; background: rgba(0, 0, 145, .05); }
+  .kb-section.kb-collapsed .kb-sec-body { display: none; }
+  .kb-sec-input, .kb-heading-input { font-weight: 700; margin-bottom: .5rem; }
+  .kb-blk { border: 1px dashed transparent; border-radius: 4px; padding: .25rem .375rem 0; margin-bottom: .25rem; }
+  .kb-blk:hover { border-color: var(--border-default-grey, #bbb); }
+  /* en mode mise en page, le contenu des champs ne capte pas la souris : le bloc entier reste une cible de dépôt (les champs désactivés n'émettent pas d'événements de glisser) */
+  .kb-blk:not(.kb-section) > :not(.kb-blk-bar):not(.kb-heading-input):not(.kb-opts) { pointer-events: none; }
+  .kb-blk-bar { display: flex; align-items: center; gap: .5rem; font-size: .75rem; color: var(--text-mention-grey, #666); margin-bottom: .25rem; }
+  .kb-blk-kind { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kb-mini { background: #fff; border: 1px solid var(--border-default-grey, #ccc); border-radius: 3px; font-size: .75rem; padding: 0 .5rem; cursor: pointer; line-height: 1.375rem; }
+  .kb-mini[aria-pressed="true"], .kb-mini[aria-expanded="true"] { background: #e3e3fd; border-color: var(--text-action-high-blue-france, #000091); }
+  .kb-mini .kb-ic { display: none; }
+  .kb-blk { container-type: inline-size; container-name: blk; }
+  .kb-blk-bar { flex-wrap: wrap; row-gap: .25rem; }
+  /* bloc étroit : les boutons de mise en forme passent en icônes seules (le libellé reste en info-bulle) */
+  @container blk (max-width: 440px) {
+    .kb-blk-bar .kb-tx { display: none; }
+    .kb-blk-bar .kb-ic { display: inline; }
+    .kb-blk-bar .kb-mini { padding: 0 .4rem; }
+    .kb-blk-kind { display: none; }
+    .kb-blk-bar { gap: .25rem; }
+    .kb-blk-bar .kb-grip { margin-right: auto; }
+  }
+  .kb-mini:hover { border-color: var(--text-action-high-blue-france, #000091); }
+  .kb-dropzone { border: 1px dashed var(--border-default-grey, #bbb); border-radius: 4px; color: var(--text-mention-grey, #888);
+                 font-size: .8125rem; text-align: center; padding: .375rem; margin: .25rem 0 .75rem; }
+  .kb-dropzone.drop-over, .kb-blk.drop-over { background: #ececfe; border-color: var(--text-action-high-blue-france, #000091); box-shadow: none; }
+  .kb-hidden { display: none !important; }
+  .kb-palette { padding: .5rem 1.5rem; background: var(--background-alt-grey, #f6f6f6); border-bottom: 1px solid var(--border-default-grey, #ddd); }
+  .kb-pal-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .375rem .5rem; margin-bottom: .375rem; }
+  .kb-pal-row:first-child { align-items: center; }
+  .kb-pal-search { flex: 1; min-width: 10rem; max-width: 16rem; margin-left: auto; }
+  .kb-pal-fields { display: flex; flex-wrap: wrap; gap: .375rem .5rem; flex: 1; max-height: 5.5rem; overflow-y: auto; align-items: center; }
+  .kb-pal-label { font-size: .75rem; font-weight: 700; color: var(--text-mention-grey, #666); margin-right: .125rem; line-height: 1.75rem; }
+  .kb-pal-hint { font-size: .75rem; color: var(--text-mention-grey, #666); }
+  .kb-chip { border: 1px dashed var(--text-action-high-blue-france, #000091); background: #fff; border-radius: 1rem; padding: .125rem .75rem;
+             font: inherit; font-size: .8125rem; cursor: grab; color: var(--text-default-grey, #3a3a3a); }
+  .kb-chip:hover { background: #ececfe; }
+  .kb-chip-el { font-weight: 700; border-style: solid; }
+  .kb-toast { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); background: #3a3a3a; color: #fff;
+              padding: .5rem 1rem; border-radius: 4px; z-index: 60; display: none; font-size: .875rem; }
+  .kb-toast.err { background: #ce0500; }
+</style>
+<script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+</head>
+<body>
+<header class="kb-bar">
+  <h1 class="kb-title" id="kbTitle">Kanban</h1>
+  <div class="kb-spacer"></div>
+  <input class="fr-input fr-input--sm" type="search" id="kbSearch" placeholder="Rechercher une carte…" aria-label="Rechercher">
+  <button class="fr-btn fr-btn--tertiary fr-btn--sm fr-icon-refresh-line" data-act="refresh" title="Recharger la structure">Recharger</button>
+  <button class="fr-btn fr-btn--secondary fr-btn--sm fr-icon-settings-5-line fr-btn--icon-left kb-owner-only kb-hidden" data-act="settings">Configurer</button>
+</header>
+<main class="kb-board" id="kbBoard"></main>
+<div class="kb-overlay" id="kbOverlay"></div>
+<aside class="kb-drawer" id="kbDrawer" aria-label="Configuration"></aside>
+<div class="kb-toast" id="kbToast"></div>
+
+<script>
+/* ------------------------------------------------------------------ *
+ * Mode démo : si le widget est ouvert hors de Grist, on simule l'API
+ * ------------------------------------------------------------------ */
+const IN_GRIST = typeof grist !== 'undefined' && window.parent !== window;
+/* En mode démo, ?role=owners|editors|viewers|error|probe-owner|probe-other simule la réponse de l'API Grist pour tester la détection du rôle */
+const DEMO_ROLE = !IN_GRIST ? new URLSearchParams(location.search).get('role') : null;
+if (!IN_GRIST) {
+  const mockRows = [
+    { id: 1, Titre: 'Cadrer le besoin utilisateur', Statut: 'À faire', Responsable: 1, Echeance: 1793923200, Priorite: 'Haute', Tags: ['L', 'Discovery', 'UX'], Description: 'Atelier avec les agents.', Avancement: 0.35, Budget: 12500.5, Solde: -1234.56, Valide: true, Actif: false, Lien: 'Spécifications https://example.org/spec', Cree: ['D', 1793923200, 'Pacific/Tahiti'], Fichiers: ['L', 1], Equipe: ['L', 2, 3] },
+    { id: 2, Titre: 'Rédiger la note de cadrage', Statut: 'En cours', Responsable: 2, Echeance: 1794528000, Priorite: 'Moyenne', Tags: ['L', 'Doc'], Description: '' },
+    { id: 3, Titre: 'Prototype du tableau de bord', Statut: 'En cours', Responsable: 1, Echeance: 1795132800, Priorite: 'Haute', Tags: ['L', 'UX'], Description: 'Version Grist.' },
+    { id: 4, Titre: 'Valider avec la DNUM', Statut: 'Terminé', Responsable: 3, Echeance: 1792713600, Priorite: 'Basse', Tags: ['L'], Description: '' },
+    { id: 5, Titre: 'Carte sans statut', Statut: '', Responsable: 0, Echeance: null, Priorite: '', Tags: ['L'], Description: '' },
+  ];
+  const people = { id: [1, 2, 3], Nom: ['Camille Durand', 'Sami Benali', 'Inès Martin'], Service: [1, 2, 1] };
+  const services = { id: [1, 2], Nom: ['Produit', 'Données'] };
+  const tcols = [
+    ['Titre', 'Text'], ['Statut', 'Choice'], ['Responsable', 'Ref:Personnes'], ['Echeance', 'Date'],
+    ['Priorite', 'Choice'], ['Tags', 'ChoiceList'], ['Description', 'Text'],
+    ['Avancement', 'Numeric'], ['Budget', 'Numeric'], ['Solde', 'Numeric'], ['Valide', 'Bool'], ['Actif', 'Bool'], ['Lien', 'Text'], ['Cree', 'DateTime:Pacific/Tahiti'], ['Fichiers', 'Attachments'], ['Equipe', 'RefList:Personnes'],
+  ];
+  const wopts = {
+    Statut: { choices: ['À faire', 'En cours', 'Terminé'], choiceOptions: { 'En cours': { fillColor: '#FEECC2', textColor: '#000' } } },
+    Priorite: { choices: ['Haute', 'Moyenne', 'Basse'], choiceOptions: { Haute: { fillColor: '#FEE9E9', textColor: '#CE0500' } } },
+    Tags: { choices: ['Discovery', 'UX', 'Doc'] },
+    Avancement: { numMode: 'percent', decimals: 0 },
+    Budget: { numMode: 'currency', currency: 'EUR' },
+    Solde: { numMode: 'decimal', decimals: 1, numSign: 'parens' },
+    Actif: { widget: 'Switch' },
+    Lien: { widget: 'HyperLink' },
+    Cree: { dateFormat: 'DD/MM/YYYY', timeFormat: 'HH:mm' },
+  };
+  let cbs = null, opts = {};
+  if (DEMO_ROLE) {
+    const realFetch = window.fetch.bind(window);
+    const json = (status, body) => Promise.resolve(new Response(JSON.stringify(body || {}), { status }));
+    window.fetch = (u, ...a) => {
+      u = String(u);
+      if (!u.startsWith('https://mock.invalid/')) return realFetch(u, ...a);
+      if (DEMO_ROLE === 'error') return Promise.reject(new TypeError('Failed to fetch'));
+      if (DEMO_ROLE === 'acl-owner') return json(404);          // l'API REST ne répond pas : seule la sonde ACL permet de conclure
+      const probe = u.includes('/usersForViewAs');
+      if (DEMO_ROLE.startsWith('probe-')) return probe ? json(DEMO_ROLE === 'probe-owner' ? 200 : 403) : json(200, {});   // pas de champ « access » : on bascule sur la sonde
+      return probe ? json(403) : json(200, { id: 'demo', name: 'Démo', access: DEMO_ROLE });
+    };
+  }
+  window.grist = {
+    getAccessToken: async () => ({ baseUrl: 'https://mock.invalid/api/docs/demo', token: 'demo-token', ttlMsecs: 60000 }),
+    ready() {},
+    onOptions(cb) { cb(opts); this._o = cb; },
+    setOptions(o) { opts = Object.assign(opts, o); this._o && this._o(opts); },
+    onRecords(cb) { cbs = cb; cb(mockRows.map(r => ({ ...r }))); },
+    getTable() {
+      return {
+        getTableId: async () => 'Tickets',
+        update: async (u) => { [].concat(u).forEach(x => Object.assign(mockRows.find(r => r.id === x.id), x.fields)); cbs(mockRows.map(r => ({ ...r }))); },
+        create: async (c) => { const id = Math.max(...mockRows.map(r => r.id)) + 1; mockRows.push({ id, Titre: 'Nouvelle carte', ...c.fields }); cbs(mockRows.map(r => ({ ...r }))); return { id }; },
+      };
+    },
+    docApi: {
+      async getAccessToken() { return { baseUrl: 'https://mock.invalid/api/docs/demo', token: 'demo-token' }; },
+      async uploadAttachment(f) { return 99; },
+      async fetchTable(name) {
+        if (name === '_grist_Tables') return { id: [1, 2, 3], tableId: ['Tickets', 'Personnes', 'Services'] };
+        if (name === 'Services') return services;
+        if (name === 'Tickets') { const o = { id: mockRows.map((r) => r.id) }; tcols.forEach(([c]) => { o[c] = mockRows.map((r) => r[c]); }); return o; }
+        if (name === 'OwnerAccess') { if (DEMO_ROLE === 'acl-owner') return { id: [1] }; throw new Error('Access denied'); }   // sonde ACL simulée
+        if (name === '_grist_Attachments') return { id: [1], fileName: ['specifications.pdf'], fileSize: [20480] };
+        if (name === 'Personnes') return people;
+        if (name === '_grist_DocInfo') return { id: [1], timezone: ['Europe/Paris'], documentSettings: [JSON.stringify({ locale: 'fr-FR', currency: 'EUR' })] };
+        const ids = [], out = { id: [], parentId: [], parentPos: [], colId: [], label: [], type: [], widgetOptions: [], visibleCol: [], isFormula: [], description: [] };
+        tcols.forEach(([c, t], i) => {
+          out.id.push(10 + i); out.parentId.push(1); out.parentPos.push(i); out.colId.push(c); out.label.push(c === 'Priorite' ? 'Priorité' : c === 'Echeance' ? 'Échéance' : c);
+          out.description.push(c === 'Budget' ? 'Budget prévisionnel en euros, hors taxes.' : ''); out.type.push(t); out.widgetOptions.push(JSON.stringify(wopts[c] || {})); out.visibleCol.push(c === 'Responsable' || c === 'Equipe' ? 51 : 0); out.isFormula.push(false);
+        });
+        out.id.push(50); out.parentId.push(2); out.parentPos.push(0); out.colId.push('Nom'); out.label.push('Nom'); out.type.push('Text');
+        out.widgetOptions.push(''); out.visibleCol.push(0); out.isFormula.push(false); out.description.push('');
+        out.id.push(51); out.parentId.push(2); out.parentPos.push(1); out.colId.push('Service'); out.label.push('Service'); out.type.push('Ref:Services');
+        out.widgetOptions.push(''); out.visibleCol.push(52); out.isFormula.push(false); out.description.push('');
+        out.id.push(52); out.parentId.push(3); out.parentPos.push(0); out.colId.push('Nom'); out.label.push('Nom'); out.type.push('Text');
+        out.widgetOptions.push(''); out.visibleCol.push(0); out.isFormula.push(false); out.description.push('');
+        return out;
+      },
+    },
+  };
+  document.addEventListener('DOMContentLoaded', () => {
+    const b = document.createElement('div');
+    b.style.cssText = 'position:fixed;bottom:.5rem;left:.5rem;z-index:70';
+    b.innerHTML = '<span class="fr-badge fr-badge--info fr-badge--sm">Mode démo (hors Grist)</span>';
+    document.body.appendChild(b);
+  });
+}
+
+/* ------------------------------------------------------------------ *
+ * Constantes & état
+ * ------------------------------------------------------------------ */
+const PALETTE = [      /* palette illustrative du DSFR */
+  { n: 'Bleu France',         bar: '#000091', bg: '#ececfe' },
+  { n: 'Bleu écume',          bar: '#465f9d', bg: '#e9edfe' },
+  { n: 'Vert émeraude',       bar: '#00a95f', bg: '#c3fad5' },
+  { n: 'Vert menthe',         bar: '#009081', bg: '#bafaee' },
+  { n: 'Jaune tournesol',     bar: '#c8aa39', bg: '#feecc2' },
+  { n: 'Orange terre battue', bar: '#e4794a', bg: '#fee9e5' },
+  { n: 'Rouge marianne',      bar: '#e1000f', bg: '#ffe9e9' },
+  { n: 'Rose tuile',          bar: '#ce614a', bg: '#fee9e6' },
+  { n: 'Violet glycine',      bar: '#a558a0', bg: '#fee7fc' },
+  { n: 'Marron caramel',      bar: '#c08c65', bg: '#f7ebe5' },
+  { n: 'Gris',                bar: '#666666', bg: '#eeeeee' },
+  { n: 'Gris clair',          bar: '#929292', bg: '#f6f6f6' },
+];
+const HIDE = /^(gristHelper_|manualSort)/;
+const GROUP_TYPES = ['Choice', 'ChoiceList', 'Ref', 'RefList'];
+
+let cfg = { groupCol: null, titleCol: null, cardFields: [], modalFields: null, editMethod: 'button' };
+let meta = { loaded: false, tableId: '', cols: [], by: {} };
+let refs = {};            // colId -> { rows:[{id,label}], map:{id:label} }
+let records = [];
+let search = '';
+let modalId = null;
+let drag = null;
+let defsCache = [];
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const col = (id) => meta.by[id];
+const isListType = (c) => c && (c.base === 'ChoiceList' || c.base === 'RefList');
+const asList = (v) => {
+  let a = Array.isArray(v) ? (v[0] === 'L' ? v.slice(1) : v) : (v == null ? [] : [v]);
+  return a.filter((x) => x !== '' && x !== 0 && x != null);
+};
+/* Date / DateTime -> secondes, quelle que soit la forme reçue (nombre, ['d'|'D', ts, tz], Date, moment, texte) */
+const toSec = (v) => {
+  if (v == null || v === '') return null;
+  if (typeof v === 'number') return v;
+  if (Array.isArray(v)) return typeof v[1] === 'number' ? v[1] : null;
+  if (typeof v === 'string') { const t = Date.parse(v); return isNaN(t) ? null : t / 1000; }
+  if (v instanceof Date) return v.getTime() / 1000;
+  if (typeof v.valueOf === 'function' && typeof v.valueOf() === 'number') return v.valueOf() / 1000;
+  return null;
+};
+/* ------------------------------------------------------------------ *
+ * Droits : la configuration et la mise en page sont réservées aux propriétaires du document.
+ * Le rôle vient de l'API REST de Grist (GET /docs/{id} → « access »). Tant qu'il est inconnu, ou si la
+ * détection échoue, l'utilisateur est considéré comme NON propriétaire (réglages masqués).
+ * Ce masquage ne concerne que l'interface : les droits réels restent ceux définis dans Grist.
+ * Dépannage : ajouter ?forceOwner=1 à l'URL du widget désactive la détection (réglages toujours visibles).
+ * ------------------------------------------------------------------ */
+let isOwner = false, accessLevel = null;      // accessLevel : 'owners' | 'editors' | 'viewers' | … | null (inconnu)
+const FORCE_OWNER = new URLSearchParams(location.search).get('forceOwner') === '1';
+/* Méthodes essayées dans l'ordre (comme dans le widget « Fiche Produit »), la première qui répond l'emporte :
+ *  1. grist.getUserSession(), si disponible        2. API REST /api/docs/{docId} (docId lu dans l'adresse de la page Grist)
+ *  3. API REST via un jeton d'accès Grist           4. sonde ACL : lecture de la table « OwnerAccess »
+ *     (table d'une ligne avec la règle « user.Access != OWNER → refuser la lecture » : lisible par les owners seulement) */
+async function accessViaRest() {
+  const docId = [document.referrer, location.href].map((s) => {
+    const m = s && (s.match(/\/o\/[^/]+\/([a-zA-Z0-9_-]{6,})(?:\/|$)/) || s.match(/\/doc\/([a-zA-Z0-9_-]{6,})/));
+    return m ? m[1] : null;
+  }).find(Boolean);
+  let origin = null; try { origin = new URL(document.referrer).origin; } catch (e) {}
+  if (!docId || !origin) return null;
+  try {
+    const r = await fetch(`${origin}/api/docs/${docId}`, { credentials: 'include' });
+    if (r.ok) { const d = await r.json(); return d && typeof d.access === 'string' ? d.access : null; }
+  } catch (e) {}
+  return null;
+}
+async function accessViaToken() {
+  try {
+    const t = await grist.getAccessToken({ readOnly: false });   // un jeton « lecture seule » ramènerait le rôle à « lecteur »
+    const q = '?auth=' + encodeURIComponent(t.token);
+    const res = await fetch(t.baseUrl + q);
+    if (res.ok) { const d = await res.json(); if (d && typeof d.access === 'string') return d.access; }
+    const probe = await fetch(t.baseUrl + '/usersForViewAs' + q);   // adresse accessible aux seuls propriétaires
+    if (probe.ok) return 'owners';
+  } catch (e) {}
+  return null;
+}
+async function accessViaProbe() {
+  try { await grist.docApi.fetchTable('OwnerAccess'); return 'owners'; }
+  catch (e) {
+    if (/not found|no such|unknown table|keyerror|does not exist/i.test(String((e && e.message) || e))) return null;   // la table n'existe pas : on ne peut pas conclure
+    return 'non-owner';
+  }
+}
+async function detectOwner() {
+  if (FORCE_OWNER || (!IN_GRIST && !DEMO_ROLE)) return 'owners';
+  let acc = null;
+  try { if (typeof grist.getUserSession === 'function') { const s = await grist.getUserSession(); acc = s && s.access ? s.access : null; } } catch (e) {}
+  if (!acc) acc = await accessViaRest();
+  if (!acc) acc = await accessViaToken();
+  if (!acc) acc = await accessViaProbe();
+  console.log('[Kanban] accès au document =', acc);
+  return acc;       // inconnu = non propriétaire (interface de configuration masquée)
+}
+function applyRole() {
+  document.querySelectorAll('.kb-owner-only').forEach((n) => n.classList.toggle('kb-hidden', !isOwner));
+  if (!isOwner) { $('#kbDrawer').classList.remove('open'); editLayout = false; }
+  renderBoard();
+  if (modalId !== null) renderModal();
+}
+function toast(msg, err) {
+  const t = $('#kbToast'); t.textContent = msg; t.className = 'kb-toast' + (err ? ' err' : ''); t.style.display = 'block';
+  clearTimeout(toast._t); toast._t = setTimeout(() => (t.style.display = 'none'), err ? 5000 : 2200);
+}
+function hash(s) { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); }
+
+/* ------------------------------------------------------------------ *
+ * Métadonnées (colonnes, choix, tables référencées)
+ * ------------------------------------------------------------------ */
+/* Libellés des lignes d'une table, d'après la colonne affichée (rowId de sa définition, 0 = identifiant).
+   Si cette colonne est elle-même une référence, on suit la chaîne jusqu'à un texte (profondeur limitée). */
+const metaRows = {}, tableCols = {};     // tableCols : colonnes de chaque table (pour choisir le champ affiché d'une référence)
+async function labelMap(tableId, visRow, depth) {
+  const d = await grist.docApi.fetchTable(tableId), m = visRow ? metaRows[visRow] : null, out = {};
+  const vals = m && d[m.colId] ? d[m.colId] : d.id;
+  let sub = null;
+  if (m && (m.base === 'Ref' || m.base === 'RefList') && m.refTable && depth < 4) { try { sub = await labelMap(m.refTable, m.visRow, depth + 1); } catch (e) {} }
+  const f = m && !sub ? makeFmt(m) : null;                       // la référence s'affiche avec le format de sa colonne
+  d.id.forEach((id, i) => {
+    out[id] = sub ? asList(vals[i]).map((x) => sub[x] ?? String(x)).join(', ') : String(f ? f(vals[i]) : (vals[i] ?? ''));
+  });
+  return out;
+}
+async function loadMeta() {
+  const tid = await grist.getTable().getTableId();
+  const [T, C, DI] = await Promise.all([
+    grist.docApi.fetchTable('_grist_Tables'), grist.docApi.fetchTable('_grist_Tables_column'),
+    grist.docApi.fetchTable('_grist_DocInfo').catch(() => null),     // langue, devise et fuseau du document
+  ]);
+  docSettings = readDocSettings(DI);
+  Object.keys(metaRows).forEach((k) => delete metaRows[k]);
+  Object.keys(altLabels).forEach((k) => delete altLabels[k]);
+  Object.keys(tableCols).forEach((k) => delete tableCols[k]);
+  const tName = {}; T.id.forEach((id, i) => { tName[id] = T.tableId[i]; });
+  C.id.forEach((id, i) => { const tn = tName[C.parentId[i]]; if (tn && !HIDE.test(C.colId[i])) (tableCols[tn] = tableCols[tn] || []).push({ id, colId: C.colId[i], label: C.label[i] || C.colId[i] }); });
+  const tRef = T.id[T.tableId.indexOf(tid)];
+  const idToColId = {}, metaOfRow = {};
+  C.id.forEach((id, i) => {
+    idToColId[id] = C.colId[i];
+    const type = C.type[i] || 'Any';
+    const [base, arg] = type.split(':');
+    let o = {}; try { o = JSON.parse(C.widgetOptions[i] || '{}') || {}; } catch (e) {}
+    metaOfRow[id] = { base, type, tz: base === 'DateTime' ? (arg || null) : null, opts: o, colId: C.colId[i], refTable: (base === 'Ref' || base === 'RefList') ? (arg || null) : null, visRow: C.visibleCol && C.visibleCol[i] ? C.visibleCol[i] : 0 };
+  });
+  const cols = [];
+  C.id.forEach((id, i) => {
+    if (C.parentId[i] !== tRef || HIDE.test(C.colId[i])) return;
+    const m = metaOfRow[id];
+    cols.push({
+      colId: C.colId[i], label: C.label[i] || C.colId[i], type: m.type, base: m.base, tz: m.tz, pos: C.parentPos ? C.parentPos[i] : i,
+      refTable: m.base === 'Ref' || m.base === 'RefList' ? (m.type.split(':')[1] || null) : null,
+      visCol: C.visibleCol && C.visibleCol[i] ? idToColId[C.visibleCol[i]] : null, visRow: C.visibleCol && C.visibleCol[i] ? C.visibleCol[i] : 0,
+      visMeta: C.visibleCol && C.visibleCol[i] ? metaOfRow[C.visibleCol[i]] : null,   // format de la colonne affichée d'une référence
+      opts: m.opts, readOnly: !!C.isFormula[i], description: ((C.description && C.description[i]) || '').toString().trim(),
+    });
+  });
+  Object.assign(metaRows, metaOfRow);
+  cols.sort((a, b) => a.pos - b.pos);
+  meta = { loaded: true, tableId: tid, cols, by: Object.fromEntries(cols.map((c) => [c.colId, c])) };
+  refs = {};
+  await Promise.all(cols.filter((c) => c.refTable).map(async (c) => {
+    try {
+      const lm = await labelMap(c.refTable, c.visRow, 0);
+      const rows = Object.keys(lm).map((id) => ({ id: Number(id), label: lm[id] }));
+      refs[c.colId] = { rows, map: Object.fromEntries(rows.map((r) => [r.id, r.label])) };
+    } catch (e) { refs[c.colId] = { rows: [], map: {} }; }
+  }));
+  if (!cfg.groupCol || !col(cfg.groupCol)) {
+    const g = cols.find((c) => GROUP_TYPES.includes(c.base));
+    if (g) cfg.groupCol = g.colId;
+  }
+  if (!cfg.titleCol || !col(cfg.titleCol)) {
+    const t = cols.find((c) => c.base === 'Text') || cols[0];
+    if (t) cfg.titleCol = t.colId;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Valeurs & affichage
+ * ------------------------------------------------------------------ */
+/* --- Formats des colonnes ------------------------------------------------
+ * On reprend les réglages d'affichage définis dans Grist :
+ *   nombres : mode (décimal avec séparateur de milliers, %, devise, scientifique), devise, décimales min/max, négatifs entre parenthèses
+ *   dates / heures : format (moment.js) et fuseau horaire
+ *   cases à cocher : case, interrupteur ou texte        liens : colonne texte de type « lien »
+ * La langue, la devise et le fuseau par défaut sont ceux du document (comme dans Grist). */
+let docSettings = { locale: 'fr-FR', currency: 'EUR', timezone: 'UTC' };
+function readDocSettings(DI) {
+  let s = {};
+  try { s = JSON.parse((DI && DI.documentSettings && DI.documentSettings[0]) || '{}') || {}; } catch (e) {}
+  let locale = s.locale && !/^en-US$/i.test(s.locale) ? s.locale : 'fr-FR';        // « en-US » est le réglage par défaut de Grist : on affiche à la française
+  try { new Intl.NumberFormat(locale); } catch (e) { locale = 'en-US'; }
+  let timezone = (DI && DI.timezone && DI.timezone[0]) || 'UTC';
+  try { new Intl.DateTimeFormat('en-US', { timeZone: timezone }); } catch (e) { timezone = 'UTC'; }
+  return { locale, currency: s.currency || 'EUR', timezone };
+}
+const pad = (n, w = 2) => String(n).padStart(w, '0');
+
+/* nombres */
+function numSeparators() {
+  const parts = new Intl.NumberFormat(docSettings.locale).formatToParts(1234567.5);
+  const get = (t, d) => (parts.find((p) => p.type === t) || { value: d }).value;
+  return { group: get('group', ''), decimal: get('decimal', '.') };
+}
+function makeNumFmt(m) {
+  const o = m.opts || {}, mode = o.numMode, loc = docSettings.locale;
+  const clamp = (n) => Math.max(0, Math.min(20, Math.round(n)));
+  const dec = typeof o.decimals === 'number' ? clamp(o.decimals) : undefined;
+  const mx = typeof o.maxDecimals === 'number' ? clamp(o.maxDecimals) : undefined;
+  let nf;
+  try {
+    const opt = {};
+    if (mode === 'currency') {
+      opt.style = 'currency'; opt.currency = o.currency || docSettings.currency;
+      const dd = new Intl.NumberFormat(loc, { style: 'currency', currency: opt.currency }).resolvedOptions().maximumFractionDigits;
+      opt.minimumFractionDigits = dec !== undefined ? dec : Math.min(dd, mx !== undefined ? mx : dd);
+      opt.maximumFractionDigits = Math.max(mx !== undefined ? mx : Math.max(dd, opt.minimumFractionDigits), opt.minimumFractionDigits);
+    } else {
+      if (mode === 'percent') opt.style = 'percent';
+      else if (mode === 'scientific') opt.notation = 'scientific';
+      else opt.useGrouping = mode === 'decimal';          // sans réglage : pas de séparateur de milliers, comme dans Grist
+      opt.minimumFractionDigits = dec !== undefined ? dec : 0;
+      opt.maximumFractionDigits = Math.max(mx !== undefined ? mx : 10, opt.minimumFractionDigits);
+    }
+    nf = new Intl.NumberFormat(loc, opt);
+  } catch (e) { nf = new Intl.NumberFormat(loc, { maximumFractionDigits: 10, useGrouping: false }); }
+  const parens = o.numSign === 'parens';
+  return (v) => {
+    if (typeof v !== 'number' || !isFinite(v)) return v == null || v === '' || typeof v === 'object' ? '' : String(v);   // texte « alternatif » conservé tel quel
+    const neg = parens && v < 0;
+    const s = nf.format(neg ? -v : v);
+    return neg ? '(' + s + ')' : s;
+  };
+}
+/* dates et heures (formats moment.js : YYYY, MM, DD, HH, mm, A, z…) */
+const dtfCache = {}, namesCache = {};
+function tzParts(sec, tz) {
+  const dtf = dtfCache[tz] || (dtfCache[tz] = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' }));
+  const p = {};
+  dtf.formatToParts(new Date(sec * 1000)).forEach((x) => { if (x.type !== 'literal') p[x.type] = parseInt(x.value, 10); });
+  if (p.hour === 24) p.hour = 0;
+  return p;
+}
+const tzOffsetMin = (sec, tz) => { const p = tzParts(sec, tz); return (Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) / 1000 - Math.floor(sec)) / 60; };
+/* « 2026-10-21T14:30 » exprimé dans le fuseau tz → secondes UTC */
+function localToSec(s, tz) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(s); if (!m) return null;
+  const guess = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) / 1000;
+  try { let sec = guess - tzOffsetMin(guess, tz) * 60; sec = guess - tzOffsetMin(sec, tz) * 60; return sec; } catch (e) { return guess; }
+}
+function names() {
+  const loc = docSettings.locale;
+  if (namesCache[loc]) return namesCache[loc];
+  const f = (opt, d) => new Intl.DateTimeFormat(loc, { timeZone: 'UTC', ...opt }).format(d);
+  const mo = (w) => Array.from({ length: 12 }, (_, i) => f({ month: w }, new Date(Date.UTC(2000, i, 15))));
+  const dy = (w) => Array.from({ length: 7 }, (_, i) => f({ weekday: w }, new Date(Date.UTC(2000, 0, 2 + i))));   // 2 janv. 2000 = dimanche
+  return (namesCache[loc] = { monthLong: mo('long'), monthShort: mo('short'), dayLong: dy('long'), dayShort: dy('short') });
+}
+function formatMoment(sec, pattern, tz) {
+  let p;
+  try { p = tzParts(sec, tz); } catch (e) { tz = 'UTC'; p = tzParts(sec, 'UTC'); }
+  const nm = names(), lang = docSettings.locale.slice(0, 2);
+  const dow = new Date(Date.UTC(p.year, p.month - 1, p.day)).getUTCDay();
+  const h12 = p.hour % 12 === 0 ? 12 : p.hour % 12;
+  const ord = (n) => {
+    if (lang === 'en') { const s = n % 100; return n + ((s >= 11 && s <= 13) ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th')); }
+    return lang === 'fr' && n === 1 ? '1er' : String(n);
+  };
+  const off = () => tzOffsetMin(sec, tz);
+  const offStr = (sep) => { const o = off(), a = Math.abs(o); return (o < 0 ? '-' : '+') + pad(Math.floor(a / 60)) + sep + pad(a % 60); };
+  const tok = {
+    YYYY: () => pad(p.year, 4), YY: () => pad(p.year % 100), MMMM: () => nm.monthLong[p.month - 1], MMM: () => nm.monthShort[p.month - 1],
+    MM: () => pad(p.month), M: () => String(p.month), Do: () => ord(p.day), DD: () => pad(p.day), D: () => String(p.day),
+    dddd: () => nm.dayLong[dow], ddd: () => nm.dayShort[dow], dd: () => nm.dayShort[dow].slice(0, 2), d: () => String(dow),
+    HH: () => pad(p.hour), H: () => String(p.hour), hh: () => pad(h12), h: () => String(h12), mm: () => pad(p.minute), m: () => String(p.minute),
+    ss: () => pad(p.second), s: () => String(p.second), A: () => (p.hour < 12 ? 'AM' : 'PM'), a: () => (p.hour < 12 ? 'am' : 'pm'),
+    ZZ: () => offStr(''), Z: () => offStr(':'),
+    z: () => { const x = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' }).formatToParts(new Date(sec * 1000)).find((y) => y.type === 'timeZoneName'); return x ? x.value : ''; },
+  };
+  return pattern.replace(/\[([^\]]*)\]|YYYY|YY|MMMM|MMM|MM|M|Do|DD|D|dddd|ddd|dd|d|HH|H|hh|h|mm|m|ss|s|A|a|ZZ|Z|z/g, (t, lit) => (lit !== undefined ? lit : tok[t]()));
+}
+function makeDateFmt(m) {
+  const o = m.opts || {}, isDT = m.base === 'DateTime';
+  /* format réglé dans Grist ; le format par défaut de Grist (AAAA-MM-JJ, h:mm AM/PM) est remplacé par JJ/MM/AAAA et HH:mm */
+  const df = o.dateFormat && (o.isCustomDateFormat || o.dateFormat !== 'YYYY-MM-DD') ? o.dateFormat : 'DD/MM/YYYY';
+  const tf = o.timeFormat !== undefined && (o.isCustomTimeFormat || o.timeFormat !== 'h:mma') ? o.timeFormat : 'HH:mm';
+  const pattern = isDT ? [df, tf].filter(Boolean).join(' ') : df;
+  const tz = isDT ? (m.tz || docSettings.timezone) : 'UTC';
+  return (raw) => {
+    if (raw == null || raw === '') return '';
+    if (typeof raw === 'string') return raw;                  // texte « alternatif » (date invalide) conservé tel quel
+    const sec = toSec(raw);
+    return sec == null ? '' : formatMoment(sec, pattern, tz);
+  };
+}
+
+/* cases à cocher */
+const boolWidget = (m) => (m.opts && m.opts.widget) || 'CheckBox';
+function makeBoolFmt(m) { const w = boolWidget(m); return (v) => (w === 'TextBox' ? (v ? 'true' : 'false') : (v ? 'Oui' : 'Non')); }
+
+function makeFmt(m) {
+  switch (m.base) {
+    case 'Numeric': case 'Int': return makeNumFmt(m);
+    case 'Date': case 'DateTime': return makeDateFmt(m);
+    case 'Bool': return makeBoolFmt(m);
+    default: return (v) => (v == null || v === '' || typeof v === 'object' ? '' : String(v));
+  }
+}
+const fmtOf = (c) => c.fmt || (c.fmt = makeFmt(c));
+
+function valueList(c, raw) {
+  switch (c.base) {
+    case 'Ref': case 'RefList': return asList(raw).map((id) => (refs[c.colId]?.map[id] ?? String(id)));
+    case 'Choice': case 'ChoiceList': return asList(raw).map(String);
+    case 'Date': case 'DateTime': case 'Numeric': case 'Int': { const s = fmtOf(c)(raw); return s === '' ? [] : [s]; }
+    case 'Bool': return [fmtOf(c)(raw)];
+    case 'Attachments': { const n = asList(raw).length; return n ? [n + (n > 1 ? ' pièces jointes' : ' pièce jointe')] : []; }
+    default: return raw == null || raw === '' ? [] : [typeof raw === 'object' ? '' : String(raw)];
+  }
+}
+const displayText = (colId, r) => { const c = col(colId); return c ? valueList(c, r[colId]).join(', ') : ''; };
+function badgeColor(c, label) {
+  const o = c.opts && c.opts.choiceOptions && c.opts.choiceOptions[label];
+  if (o && o.fillColor) return { bg: o.fillColor, fg: o.textColor || '#161616' };
+  const p = PALETTE[hash(label) % PALETTE.length];
+  return { bg: p.bg, fg: p.bar };
+}
+
+/* ------------------------------------------------------------------ *
+ * Colonnes du kanban
+ * ------------------------------------------------------------------ */
+function groupDefs() {
+  const gc = col(cfg.groupCol);
+  if (!gc) return [];
+  let defs = [];
+  if (gc.base === 'Choice' || gc.base === 'ChoiceList') {
+    const co = (gc.opts && gc.opts.choiceOptions) || {};
+    defs = ((gc.opts && gc.opts.choices) || []).map((c) => ({ key: c, label: c, color: co[c] && co[c].fillColor }));
+  } else {
+    defs = (refs[gc.colId]?.rows || []).map((r) => ({ key: r.id, label: r.label }));
+  }
+  defs.unshift({ key: null, label: 'Sans valeur' });
+  return defs.map((d, i) => ({ ...d, idx: i, color: colorOf(d, i) }));
+}
+function colorOf(d, i) {
+  if (d.color) return { bar: d.color, bg: '#f6f6f6' };
+  if (d.key === null) return PALETTE[11];
+  return PALETTE[(i - 1) % 10];
+}
+function inColumn(r, key) {
+  const vals = asList(r[cfg.groupCol]);
+  return key === null ? vals.length === 0 : vals.includes(key);
+}
+function matches(r) {
+  if (!search) return true;
+  const ids = [cfg.titleCol, ...cfg.cardFields.map((f) => f.col)];
+  return ids.some((id) => displayText(id, r).toLowerCase().includes(search));
+}
+
+/* ------------------------------------------------------------------ *
+ * Rendu du board
+ * ------------------------------------------------------------------ */
+/* La forme d'affichage dépend du type du champ (pas de réglage) */
+function formOf(c) {
+  if (c.base === 'Date' || c.base === 'DateTime') return 'date';
+  if (c.base === 'Bool') return 'bool';
+  if (c.base === 'Text' && c.opts && c.opts.widget === 'HyperLink') return 'lien';
+  if (['Choice', 'ChoiceList', 'Ref', 'RefList'].includes(c.base)) return 'pastille';
+  return 'texte';
+}
+/* Lien : « https://… » ou « Libellé https://… » (comme dans Grist) ; seuls http, https et mailto sont cliquables */
+function linkHtml(s) {
+  const m = /^(.*?)\s*((?:https?:\/\/|mailto:)\S+)$/i.exec(String(s).trim());
+  if (!m) return esc(s);
+  return `<a href="${esc(m[2])}" target="_blank" rel="noopener noreferrer" class="kb-link">${esc(m[1] || m[2])}</a>`;
+}
+/* Chaque champ s'affiche avec son titre (libellé de la colonne) au-dessus de sa valeur */
+function fieldHtml(f, r) {
+  const c = col(f.col); if (!c) return '';
+  const vals = valueList(c, r[f.col]);
+  if (!vals.length) return '';
+  const form = formOf(c);
+  let body;
+  if (form === 'pastille') {
+    body = `<div class="kb-badges">${vals.map((v) => { const k = badgeColor(c, v); return `<span class="kb-badge" style="background:${k.bg};color:${k.fg}">${esc(v)}</span>`; }).join('')}</div>`;
+  } else if (form === 'bool') {
+    body = `<div class="kb-f-val"><input type="checkbox" class="kb-check" disabled ${r[f.col] ? 'checked' : ''} aria-label="${esc(c.label)}"></div>`;
+  } else if (form === 'lien') {
+    body = `<div class="kb-f-val">${linkHtml(vals[0])}</div>`;
+  } else if (form === 'date') {
+    body = `<div class="kb-f-val"><span class="fr-icon-calendar-line fr-icon--sm" aria-hidden="true"></span> ${esc(vals.join(', '))}</div>`;
+  } else {
+    body = `<div class="kb-f-val" style="${colStyle(c)}">${esc(vals.join(', '))}</div>`;
+  }
+  return `<div class="kb-f"><div class="kb-f-label">${esc(c.label)}</div>${body}</div>`;
+}
+function cardHtml(r, d) {
+  const title = displayText(cfg.titleCol, r) || 'Sans titre';
+  const fields = cfg.cardFields.map((f) => fieldHtml(f, r)).filter(Boolean);
+  return `<article class="kb-card" draggable="true" data-id="${r.id}" data-idx="${d.idx}">
+    <h3 class="kb-card-title">${esc(title)}</h3>
+    ${fields.length ? `<div class="kb-fields">${fields.join('')}</div>` : ''}
+  </article>`;
+}
+function renderBoard() {
+  const board = $('#kbBoard');
+  $('#kbTitle').textContent = meta.tableId ? `Kanban · ${meta.tableId}` : 'Kanban';
+  if (!meta.loaded) { board.innerHTML = '<div class="kb-empty">Chargement…</div>'; return; }
+  if (!col(cfg.groupCol)) {
+    board.innerHTML = isOwner
+      ? `<div class="kb-empty"><p>Choisissez la colonne (liste de choix ou référence) qui définit les colonnes du kanban.</p>
+      <button class="fr-btn" data-act="settings">Configurer</button></div>`
+      : `<div class="kb-empty"><p>Ce kanban n’est pas encore configuré.</p><p class="fr-hint-text">Seuls les propriétaires du document peuvent le configurer.</p></div>`;
+    return;
+  }
+  const filtered = records.filter(matches);
+  defsCache = groupDefs();
+  board.innerHTML = defsCache.map((d) => {
+    const cards = filtered.filter((r) => inColumn(r, d.key));
+    if (d.key === null && !cards.length) return '';
+    return `<section class="kb-col" style="--col-bar:${d.color.bar};--col-bg:${d.color.bg}" data-idx="${d.idx}">
+      <div class="kb-col-head">
+        <span class="kb-col-name" title="${esc(d.label)}">${esc(d.label)}</span>
+        <span class="kb-count">${cards.length}</span>
+      </div>
+      <div class="kb-col-body" data-idx="${d.idx}">${cards.map((r) => cardHtml(r, d)).join('')}</div>
+    </section>`;
+  }).join('');
+}
+
+/* ------------------------------------------------------------------ *
+ * Écriture dans Grist
+ * ------------------------------------------------------------------ */
+async function saveFields(id, fields) {
+  const r = records.find((x) => x.id === id);
+  if (r) Object.assign(r, fields);
+  renderBoard();
+  try { await grist.getTable().update({ id, fields }); }
+  catch (e) { toast('Erreur d’enregistrement : ' + (e.message || e), true); }
+}
+function encodeGroup(gc, key) {
+  if (gc.base === 'Choice') return key === null ? '' : key;
+  if (gc.base === 'Ref') return key === null ? 0 : key;
+  return key === null ? ['L'] : ['L', key];
+}
+function moveCard(id, fromIdx, toIdx) {
+  if (fromIdx === toIdx) return;
+  const gc = col(cfg.groupCol), r = records.find((x) => x.id === id); if (!gc || !r) return;
+  const from = defsCache[fromIdx].key, to = defsCache[toIdx].key;
+  let val;
+  if (isListType(gc)) {
+    const list = asList(r[gc.colId]).filter((v) => v !== from);
+    if (to !== null && !list.includes(to)) list.push(to);
+    val = ['L', ...list];
+  } else val = encodeGroup(gc, to);
+  saveFields(id, { [gc.colId]: val });
+}
+
+/* ------------------------------------------------------------------ *
+ * Popup d'édition — la mise en page se modifie directement dans la popup
+ *
+ * cfg.modalFields est une liste plate de blocs :
+ *   { col, w: 'full' | 'half' }      un champ (pas de "type")
+ *   { type: 'heading', text }         un titre
+ *   { type: 'divider' }               un séparateur
+ *   { type: 'section', id, text }     une section : regroupe les blocs qui suivent, jusqu'à la section suivante
+ * Le titre de la carte est modifiable en haut de la fenêtre.
+ * ------------------------------------------------------------------ */
+let editLayout = false;       // mode « Mise en page »
+let mdrag = null;             // glisser-déposer en cours dans la popup
+const collapsed = new Set();  // sections repliées (mode lecture)
+const uid = () => 's' + Math.random().toString(36).slice(2, 9);
+const blocks = () => (cfg.modalFields = cfg.modalFields || []);
+const isSection = (b) => !!b && b.type === 'section';
+const secEnd = (s) => { const L = blocks(); let k = s + 1; while (k < L.length && !isSection(L[k])) k++; return k; };
+const wCls = (w) => (w === 'full' ? 'kb-full' : w === 'third' ? 'kb-w-third' : w === 'two' ? 'kb-w-two' : '');   // demi-largeur par défaut
+const defaultWidth = (c) => (c && ['Text', 'ChoiceList', 'RefList'].includes(c.base) ? 'full' : 'half');
+
+/* --- champs : affichage (lecture) et saisie (modification), sur le modèle de la fiche -------------------
+ * Lecture : valeur formatée comme dans Grist, pastilles colorées, pièces jointes téléchargeables, « Non renseigné » si vide.
+ * Modification : un composant par type de champ (liste déroulante colorée, pastilles + « + », recherche de référence,
+ * date, nombre avec unité %, pièces jointes…). Les valeurs saisies attendent dans « pending » jusqu'à « Enregistrer ».
+ * Options par champ (mode mise en page) : nom affiché, icône, texte si vide, lecture seule, champ affiché et couleur des références. */
+const TAG_COLORS = [      /* teintes DSFR : fond 950, texte foncé */
+  { key: 'blue', bg: '#ececfe', text: '#000091', label: 'Bleu France' }, { key: 'green', bg: '#c3fad5', text: '#18753c', label: 'Vert' },
+  { key: 'purple', bg: '#fee7fc', text: '#6e445a', label: 'Violet' }, { key: 'teal', bg: '#bafaee', text: '#006a6f', label: 'Menthe' },
+  { key: 'orange', bg: '#fee9e5', text: '#b34000', label: 'Orange' }, { key: 'red', bg: '#ffe9e9', text: '#ce0500', label: 'Rouge' },
+  { key: 'pink', bg: '#fee9e6', text: '#a94645', label: 'Rose' }, { key: 'gray', bg: '#eeeeee', text: '#3a3a3a', label: 'Gris' },
+];
+const EMOJIS = ['👤', '👥', '🏢', '📍', '📅', '⏰', '💶', '📊', '🎯', '💡', '🔑', '📝', '💬', '✅', '⚠️', '🔗', '📎', '📂', '🔧', '🌐', '📧', '🏷', '📦'];
+const tagOf = (k) => TAG_COLORS.find((t) => t.key === k) || TAG_COLORS[0];
+let pending = {};        // valeurs modifiées, pas encore enregistrées { colId: valeur }
+let editing = false;     // mode « Modifier » (méthode « bouton »)
+let optIdx = null;       // bloc dont le panneau d'options est ouvert (mode mise en page)
+const canWrite = () => accessLevel !== 'viewers';
+const dataEditing = () => !editLayout && canWrite() && (cfg.editMethod === 'direct' || editing);
+const refIds = (v) => asList(v).filter((x) => typeof x === 'number' && x > 0);
+const lockedField = (c, b) => !!(c.readOnly || (b && b.ro));
+const curVal = (colId) => (colId in pending ? pending[colId] : ((records.find((x) => x.id === modalId) || {})[colId]));
+
+/* style de colonne défini dans Grist (couleur du texte, fond, gras, italique…) */
+function colStyle(c) {
+  const o = (c && c.opts) || {};
+  let s = '';
+  if (o.textColor) s += `color:${o.textColor};`;
+  if (o.fillColor) s += `background:${o.fillColor};padding:2px 6px;border-radius:3px;`;
+  if (o.fontBold) s += 'font-weight:700;';
+  if (o.fontItalic) s += 'font-style:italic;';
+  const deco = [o.fontUnderline && 'underline', o.fontStrikethrough && 'line-through'].filter(Boolean).join(' ');
+  return deco ? s + `text-decoration:${deco};` : s;
+}
+/* pastille de choix : couleurs de Grist, sinon bleu */
+function pillCss(c, v) {
+  const co = (c.opts && c.opts.choiceOptions) || {}, has = Object.keys(co).length > 0, o = co[v] || {};
+  const deco = [o.fontUnderline && 'underline', o.fontStrikethrough && 'line-through'].filter(Boolean).join(' ');
+  return `background:${o.fillColor || (has ? '#eeeeee' : '#ececfe')};color:${o.textColor || (has ? '#000' : '#000091')};font-weight:${o.fontBold ? 700 : 600};`
+    + (o.fontItalic ? 'font-style:italic;' : '') + (deco ? `text-decoration:${deco};` : '');
+}
+const xBtn = (act, c, v) => `<button type="button" class="kb-x" data-act="${act}" data-col="${esc(c.colId)}" data-v="${esc(v)}" aria-label="Retirer">×</button>`;
+const pill = (c, v, rm) => `<span class="kb-pill" style="${pillCss(c, v)}">${esc(v)}${rm ? xBtn('rmCl', c, v) : ''}</span>`;
+function isEmptyVal(c, raw) {
+  if (c.base === 'Bool') return false;
+  if (c.base === 'Ref' || c.base === 'RefList' || c.base === 'Attachments') return refIds(raw).length === 0;
+  if (c.base === 'Choice' || c.base === 'ChoiceList') return asList(raw).length === 0;
+  return raw == null || raw === '' || (Array.isArray(raw) && !raw.length);
+}
+
+/* libellés d'une référence : colonne affichée dans Grist, ou colonne choisie pour ce champ (option « Champ affiché ») */
+const altLabels = {};
+function refMap(c, b) {
+  const base = (refs[c.colId] && refs[c.colId].map) || {};
+  if (!b || !b.refField) return base;
+  const k = c.refTable + '|' + b.refField;
+  if (altLabels[k]) return altLabels[k];
+  if (altLabels[k] === undefined) {
+    altLabels[k] = null;
+    const row = (tableCols[c.refTable] || []).find((x) => x.colId === b.refField);
+    labelMap(c.refTable, row ? row.id : 0, 0).then((m) => { altLabels[k] = m; if (modalId !== null) renderModal(); }).catch(() => { altLabels[k] = {}; });
+  }
+  return base;
+}
+
+/* pièces jointes */
+const attachMeta = {}, attTried = new Set(); let attLoading = false;
+async function ensureAtt(ids) {
+  const missing = ids.filter((id) => !attachMeta[id] && !attTried.has(id));
+  if (!missing.length || attLoading) return;
+  attLoading = true; missing.forEach((id) => attTried.add(id));
+  try {
+    const rows = await grist.docApi.fetchTable('_grist_Attachments');
+    rows.id.forEach((id, i) => { attachMeta[id] = { name: rows.fileName ? rows.fileName[i] : '', size: rows.fileSize ? rows.fileSize[i] : null }; });
+    if (modalId !== null) renderModal();
+  } catch (e) {}
+  attLoading = false;
+}
+const fileSize = (n) => (typeof n !== 'number' || n <= 0 ? '' : n < 1024 ? n + ' o' : n < 1048576 ? Math.round(n / 1024) + ' Ko' : (n / 1048576).toFixed(1).replace('.', ',') + ' Mo');
+function attChip(id, c) {
+  const m = attachMeta[id], size = m ? fileSize(m.size) : '';
+  return `<span class="kb-att"><button type="button" class="kb-att-name" data-act="attDl" data-v="${id}" title="Télécharger${size ? ' (' + size + ')' : ''}">📎 ${esc(m && m.name ? m.name : 'Fichier ' + id)}</button>${c ? xBtn('attRm', c, id) : ''}</span>`;
+}
+async function downloadAtt(id) {
+  const name = (attachMeta[id] && attachMeta[id].name) || 'fichier-' + id;
+  try {
+    const t = await grist.docApi.getAccessToken({ readOnly: true });
+    const url = `${t.baseUrl}/attachments/${id}/download?auth=${encodeURIComponent(t.token)}`;
+    try {
+      const resp = await fetch(url); if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const u = URL.createObjectURL(await resp.blob()), a = document.createElement('a');
+      a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 10000);
+    } catch (e) { window.open(url, '_blank'); }
+  } catch (e) { toast('Téléchargement impossible : ' + (e.message || e), true); }
+}
+
+/* --- lecture ------------------------------------------------------------ */
+function displayBody(c, raw, b) {
+  if (c.base === 'Bool') return `<div class="kb-val"><input type="checkbox" class="kb-check" disabled ${raw ? 'checked' : ''} aria-label="${esc(c.label)}"></div>`;
+  if (isEmptyVal(c, raw)) return `<span class="kb-empty-val">${esc((b && b.empty) || 'Non renseigné')}</span>`;
+  switch (c.base) {
+    case 'Ref': case 'RefList': {
+      const m = refMap(c, b), t = tagOf(b && b.tag);
+      return `<div class="kb-tags">${refIds(raw).map((id) => `<span class="kb-pill" style="background:${t.bg};color:${t.text}">${esc(m[id] ?? id)}</span>`).join('')}</div>`;
+    }
+    case 'Choice': case 'ChoiceList': return `<div class="kb-tags">${asList(raw).map((v) => pill(c, String(v))).join('')}</div>`;
+    case 'Attachments': { const ids = refIds(raw); ensureAtt(ids); return `<div class="kb-tags">${ids.map((id) => attChip(id)).join('')}</div>`; }
+    default: {
+      const s = valueList(c, raw).join(', ');
+      if (formOf(c) === 'lien') return `<div class="kb-val">${linkHtml(s)}</div>`;
+      return `<div class="kb-val" style="${colStyle(c)}">${esc(s)}</div>`;
+    }
+  }
+}
+
+/* --- modification -------------------------------------------------------- */
+const currencySymbol = (c) => {
+  try { return new Intl.NumberFormat(docSettings.locale, { style: 'currency', currency: (c.opts && c.opts.currency) || docSettings.currency }).formatToParts(0).find((p) => p.type === 'currency').value; }
+  catch (e) { return ''; }
+};
+function refOptions(c, b, q) {
+  const m = refMap(c, b), have = new Set(refIds(curVal(c.colId))), nq = norm(q);
+  const rows = Object.keys(m).map((id) => ({ id: Number(id), label: String(m[id]) })).filter((r) => r.label && !have.has(r.id) && (!nq || norm(r.label).includes(nq))).slice(0, 50);
+  if (!rows.length) return `<div class="kb-dd-none">${q ? 'Aucun résultat' : 'Toutes les entrées sont déjà sélectionnées'}</div>`;
+  return rows.map((r) => `<button type="button" class="kb-dd-item" data-act="addRef" data-col="${esc(c.colId)}" data-v="${r.id}">${esc(r.label)}</button>`).join('');
+}
+function editorBody(c, raw, b) {
+  const k = esc(c.colId), ph = esc((b && b.empty) || 'Non renseigné'), none = `<span class="kb-empty-val">${ph}</span>`;
+  switch (c.base) {
+    case 'Bool': return `<div class="kb-val"><input type="checkbox" class="kb-check" data-f="${k}" ${raw ? 'checked' : ''} aria-label="${esc(c.label)}"></div>`;
+    case 'Choice': {
+      const ch = (c.opts && c.opts.choices) || [], cur = asList(raw)[0], all = cur && !ch.includes(cur) ? [cur, ...ch] : ch;
+      return `<div class="kb-dd"><button type="button" class="kb-dd-trigger" data-act="dd">${cur ? pill(c, String(cur)) : none}<span class="kb-chev2">▾</span></button>
+        <div class="kb-dd-list"><button type="button" class="kb-dd-item" data-act="pick" data-col="${k}" data-v="">— ${ph} —</button>
+        ${all.map((v) => `<button type="button" class="kb-dd-item" data-act="pick" data-col="${k}" data-v="${esc(v)}">${pill(c, String(v))}</button>`).join('')}</div></div>`;
+    }
+    case 'ChoiceList': {
+      const sel = asList(raw).map(String), rest = ((c.opts && c.opts.choices) || []).filter((v) => !sel.includes(v));
+      return `<div class="kb-tags kb-dd">${sel.map((v) => pill(c, v, true)).join('')}${!sel.length ? none : ''}
+        ${rest.length ? `<button type="button" class="kb-plus" data-act="dd" aria-label="Ajouter une valeur">+</button><div class="kb-dd-list">${rest.map((v) => `<button type="button" class="kb-dd-item" data-act="addCl" data-col="${k}" data-v="${esc(v)}">${pill(c, v)}</button>`).join('')}</div>` : ''}</div>`;
+    }
+    case 'Ref': case 'RefList': {
+      const m = refMap(c, b), t = tagOf(b && b.tag), ids = refIds(raw);
+      const tags = ids.map((id) => `<span class="kb-pill" style="background:${t.bg};color:${t.text}">${esc(m[id] ?? id)}${xBtn('rmRef', c, id)}</span>`).join('') || none;
+      return `<div class="kb-ref"><div class="kb-tags">${tags}</div><div class="kb-dd"><input type="search" class="fr-input" data-refsearch="${k}" placeholder="Rechercher…" autocomplete="off" aria-label="Rechercher dans ${esc(c.label)}"><div class="kb-dd-list">${refOptions(c, b, '')}</div></div></div>`;
+    }
+    case 'Date': {
+      const s0 = toSec(raw), v = s0 != null ? new Date(s0 * 1000).toISOString().slice(0, 10) : '';
+      return `<input class="fr-input" type="date" data-f="${k}" data-kind="date" value="${v}">`;
+    }
+    case 'DateTime': {
+      const tz = c.tz || docSettings.timezone, v = toSec(raw) != null ? formatMoment(toSec(raw), 'YYYY-MM-DDTHH:mm', tz) : '';
+      return `<input class="fr-input" type="datetime-local" data-f="${k}" data-kind="datetime" data-tz="${esc(tz)}" value="${v}">`;
+    }
+    case 'Numeric': case 'Int': {
+      const pct = (c.opts || {}).numMode === 'percent', unit = pct ? '%' : ((c.opts || {}).numMode === 'currency' ? currencySymbol(c) : '');
+      const v = typeof raw === 'number' ? String(pct ? +(raw * 100).toPrecision(12) : raw) : (raw == null ? '' : String(raw));
+      return `<div class="kb-numwrap"><input class="fr-input" type="number" step="${c.base === 'Int' ? 1 : 'any'}" data-f="${k}" data-kind="num" ${pct ? 'data-pct="1"' : ''} value="${esc(v)}" placeholder="${ph}">${unit ? `<span class="kb-unit">${esc(unit)}</span>` : ''}</div>`;
+    }
+    case 'Text': {
+      const long = typeof raw === 'string' && (raw.length > 80 || raw.includes('\n'));
+      return `<textarea class="fr-input kb-auto" data-f="${k}" data-kind="text" rows="${long ? 3 : 1}" placeholder="${ph}" style="${colStyle(c)}">${esc(raw ?? '')}</textarea>`;
+    }
+    case 'Attachments': {
+      const ids = refIds(raw); ensureAtt(ids);
+      return `<div class="kb-att-wrap"><div class="kb-tags">${ids.map((id) => attChip(id, c)).join('') || none}</div>
+        <input type="file" multiple hidden data-attfile="${k}"><button type="button" class="fr-btn fr-btn--tertiary fr-btn--sm" data-act="attAdd" data-col="${k}">+ Ajouter un fichier</button></div>`;
+    }
+    default: return displayBody(c, raw, b);
+  }
+}
+
+/* un champ : titre (icône, nom, ⓘ description, badge) puis valeur */
+function cellHtml(b, c, raw, full) {
+  const locked = lockedField(c, b), de = dataEditing() && !locked;
+  const info = c.description ? `<span class="kb-info" tabindex="0" data-tip="${esc(c.description)}" aria-label="${esc(c.description)}">i</span>` : '';
+  const badge = dataEditing() && locked ? `<span class="kb-ro" title="${c.readOnly ? 'Champ calculé : non modifiable' : 'Lecture seule dans ce widget'}" aria-label="${c.readOnly ? 'Formule' : 'Lecture seule'}"><span class="kb-ic" aria-hidden="true">${c.readOnly ? 'ƒ' : '🔒'}</span><span class="kb-tx">${c.readOnly ? 'Formule' : 'Lecture seule'}</span></span>`
+    : (editLayout && b.ro ? '<span class="kb-ro">🔒</span>' : '');
+  return `<div class="kb-cell ${wCls(b.w)}"><div class="kb-cell-label">${b.emoji ? `<span class="kb-emoji">${esc(b.emoji)}</span>` : ''}${esc(b.label || c.label)}${info}${badge}</div>${de ? editorBody(c, raw, b) : displayBody(c, raw, b)}</div>`;
+}
+function fieldBlockHtml(b, i, r) {
+  const c = col(b.col);
+  if (!c || b.col === cfg.titleCol) {
+    return editLayout
+      ? `<div class="fr-input-group kb-full"><p class="fr-hint-text">${c ? `« ${esc(c.label)} » est déjà utilisé comme titre.` : `Colonne introuvable : ${esc(b.col)}.`} Retirez ce bloc.</p></div>`
+      : '';
+  }
+  return cellHtml(b, c, b.col in pending ? pending[b.col] : r[b.col], b.w === 'full');
+}
+/* panneau d'options d'un champ (mode mise en page) */
+function optsHtml(b, i) {
+  const c = col(b.col); if (!c) return '';
+  const isRef = c.base === 'Ref' || c.base === 'RefList';
+  const refCols = isRef ? (tableCols[c.refTable] || []) : [];
+  return `<div class="kb-opts">
+    <label>Nom affiché<input class="fr-input fr-input--sm" data-opt="label" data-i="${i}" value="${esc(b.label || '')}" placeholder="${esc(c.label)}"></label>
+    <label>Texte si vide<input class="fr-input fr-input--sm" data-opt="empty" data-i="${i}" value="${esc(b.empty || '')}" placeholder="Non renseigné"></label>
+    <label>Icône<input class="fr-input fr-input--sm kb-emoji-in" data-opt="emoji" data-i="${i}" value="${esc(b.emoji || '')}" maxlength="4" placeholder="—"></label>
+    <div class="kb-emojis">${EMOJIS.map((e) => `<button type="button" class="kb-emoji-btn" data-act="setEmoji" data-i="${i}" data-v="${esc(e)}">${e}</button>`).join('')}</div>
+    <label class="kb-opt-check"><input type="checkbox" data-opt="ro" data-i="${i}" ${b.ro ? 'checked' : ''}> Lecture seule (jamais modifiable dans ce widget)</label>
+    ${isRef ? `<label>Champ affiché<select class="fr-select fr-select--sm" data-opt="refField" data-i="${i}"><option value="">Colonne affichée dans Grist</option>${refCols.map((x) => `<option value="${esc(x.colId)}" ${x.colId === b.refField ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}</select></label>
+    <div class="kb-opt-tags">Couleur des pastilles ${TAG_COLORS.map((t) => `<button type="button" class="kb-swatch ${t.key === (b.tag || 'blue') ? 'on' : ''}" data-act="setTag" data-i="${i}" data-v="${t.key}" style="background:${t.bg};color:${t.text}" title="${t.label}">Aa</button>`).join('')}</div>` : ''}
+  </div>`;
+}
+function barHtml(b, i, kind) {
+  const w = !b.type ? `<select class="kb-wsel" data-wsel="${i}" aria-label="Largeur du champ" title="Largeur du champ : ⅓, ½, ⅔ ou pleine largeur">${[['third', '⅓'], ['half', '½'], ['two', '⅔'], ['full', 'Plein']].map(([v, l]) => `<option value="${v}" ${(b.w || 'half') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+    <button type="button" class="kb-mini" data-act="blkOpt" data-i="${i}" aria-expanded="${optIdx === i}" title="Options : nom, icône, texte si vide, lecture seule…" aria-label="Options du champ"><span class="kb-ic" aria-hidden="true">⚙</span><span class="kb-tx">Options ${optIdx === i ? '▴' : '▾'}</span></button>` : '';
+  return `<div class="kb-blk-bar"><span class="kb-grip" title="Glisser pour déplacer" aria-label="Glisser pour déplacer">⠿</span>
+    <span class="kb-blk-kind">${kind}</span>${w}
+    <button type="button" class="kb-mini" data-act="blkRm" data-i="${i}" title="Retirer ce bloc" aria-label="Retirer ce bloc"><span class="kb-ic" aria-hidden="true">✕</span><span class="kb-tx">Retirer</span></button></div>`;
+}
+
+/* --- rendu des blocs --------------------------------------------------- */
+function blockHtml(b, i, r, sec) {
+  let inner, full = true, kind;
+  if (b.type === 'heading') {
+    kind = 'Titre';
+    inner = editLayout
+      ? `<input class="fr-input kb-heading-input" data-blk="text" data-i="${i}" value="${esc(b.text || '')}" placeholder="Texte du titre" aria-label="Texte du titre">`
+      : `<h3 class="kb-heading">${esc(b.text || '')}</h3>`;
+  } else if (b.type === 'divider') {
+    kind = 'Séparateur'; inner = '<hr class="kb-divider">';
+  } else {
+    kind = 'Champ'; full = b.w === 'full';
+    inner = fieldBlockHtml(b, i, r);
+    if (!inner) return '';
+  }
+  if (!editLayout) return b.type ? `<div class="kb-full">${inner}</div>` : inner;
+  return `<div class="kb-blk ${b.type ? 'kb-full' : wCls(b.w)}" draggable="false" data-i="${i}" data-sec="${sec}">${barHtml(b, i, kind)}${!b.type && optIdx === i ? optsHtml(b, i) : ''}${inner}</div>`;
+}
+function sectionHtml(b, i, inner, endPos) {
+  const key = b.id || ('s' + i);
+  const shut = !editLayout && !!b.fold && collapsed.has(key);
+  if (!editLayout) {
+    const head = b.fold
+      ? `<button type="button" class="kb-sec-toggle" data-act="toggleSec" data-key="${esc(key)}" aria-expanded="${!shut}"><span class="kb-chev">${shut ? '▸' : '▾'}</span> ${esc(b.text || 'Section')}</button>`
+      : `<h3 class="kb-sec-title">${esc(b.text || 'Section')}</h3>`;
+    return `<section class="kb-section kb-full ${shut ? 'kb-collapsed' : ''}">${head}<div class="kb-sec-body">${inner}</div></section>`;
+  }
+  return `<section class="kb-section kb-blk kb-full" draggable="false" data-i="${i}" data-sec="${i}">
+    <div class="kb-blk-bar"><span class="kb-grip" title="Glisser pour déplacer la section" aria-label="Glisser pour déplacer la section">⠿</span>
+      <span class="kb-blk-kind">Section</span>
+      <button type="button" class="kb-mini" data-act="secFold" data-i="${i}" aria-pressed="${!!b.fold}" title="Section pliable : ${b.fold ? 'oui' : 'non'} (permet de plier et déplier la section)" aria-label="Section pliable"><span class="kb-ic" aria-hidden="true">▾</span><span class="kb-tx">Pliable : ${b.fold ? 'oui' : 'non'}</span></button>
+      ${b.fold ? `<button type="button" class="kb-mini" data-act="secClosed" data-i="${i}" aria-pressed="${!!b.closed}" title="Repliée au départ : ${b.closed ? 'oui' : 'non'} (section repliée à l’ouverture de la fenêtre)" aria-label="Repliée au départ"><span class="kb-ic" aria-hidden="true">⊟</span><span class="kb-tx">Repliée au départ : ${b.closed ? 'oui' : 'non'}</span></button>` : ''}
+      <button type="button" class="kb-mini" data-act="blkRm" data-i="${i}" title="Retirer la section (ses champs sont conservés)" aria-label="Retirer la section"><span class="kb-ic" aria-hidden="true">✕</span><span class="kb-tx">Retirer la section</span></button></div>
+    <input class="fr-input kb-sec-input" data-blk="text" data-i="${i}" value="${esc(b.text || '')}" placeholder="Titre de la section" aria-label="Titre de la section">
+    <div class="kb-sec-body">${inner}<div class="kb-dropzone kb-full" data-pos="${endPos}">Déposez ici</div></div></section>`;
+}
+function bodyHtml(r) {
+  const L = blocks();
+  let out = '', k = 0;
+  while (k < L.length && !isSection(L[k])) { out += blockHtml(L[k], k, r, -1); k++; }
+  while (k < L.length) {
+    const s = k, e = secEnd(s);
+    let inner = '';
+    for (let j = s + 1; j < e; j++) inner += blockHtml(L[j], j, r, s);
+    out += sectionHtml(L[s], s, inner, e);
+    k = e;
+  }
+  if (editLayout) out += `<div class="kb-dropzone kb-full" data-pos="${L.length}">Déposez ici pour ajouter à la fin</div>`;
+  else if (!out.trim()) out = '<p class="fr-hint-text kb-full">Aucun champ. Cliquez sur « Mise en page » pour en ajouter.</p>';
+  return out;
+}
+function paletteHtml() {
+  const used = new Set(blocks().filter((b) => !b.type).map((b) => b.col));
+  const free = meta.cols.filter((c) => c.colId !== cfg.titleCol && !used.has(c.colId));
+  const chip = (spec, label, cls, extra) => `<button type="button" class="kb-chip ${cls || ''}" draggable="true" data-act="addBlk" data-spec="${esc(JSON.stringify(spec))}" ${extra || ''}>${label}</button>`;
+  const q = norm(palSearch);
+  const fieldChip = (c) => chip({ col: c.colId }, esc(c.label), q && !norm(c.label + ' ' + c.colId).includes(q) ? 'kb-hidden' : '',
+    `data-find="${esc(norm(c.label + ' ' + c.colId))}"`);
+  const shown = free.filter((c) => !q || norm(c.label + ' ' + c.colId).includes(q)).length;
+  return `<div class="kb-palette">
+    <div class="kb-pal-row">
+      <span class="kb-pal-label">Éléments :</span>
+      ${chip({ type: 'heading' }, 'Titre', 'kb-chip-el')}${chip({ type: 'section' }, 'Section', 'kb-chip-el')}${chip({ type: 'divider' }, 'Séparateur', 'kb-chip-el')}
+      <input type="search" class="fr-input fr-input--sm kb-pal-search" data-blk="search" value="${esc(palSearch)}" placeholder="Rechercher un champ…" aria-label="Rechercher un champ">
+    </div>
+    <div class="kb-pal-row">
+      <span class="kb-pal-label">Champs :</span>
+      <div class="kb-pal-fields">
+        ${free.map(fieldChip).join('')}
+        <span class="fr-hint-text kb-pal-none ${free.length && shown ? 'kb-hidden' : ''}">${free.length ? 'Aucun champ ne correspond.' : 'Tous les champs sont placés.'}</span>
+      </div>
+    </div>
+    <div class="kb-pal-hint">Glissez un élément dans la fenêtre, ou cliquez pour l’ajouter à la fin.</div></div>`;
+}
+/* recherche : sans accent ni casse */
+const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+let palSearch = '';
+function filterPalette() {
+  const q = norm(palSearch);
+  let n = 0;
+  document.querySelectorAll('.kb-pal-fields .kb-chip').forEach((c) => {
+    const ok = !q || c.dataset.find.includes(q);
+    c.classList.toggle('kb-hidden', !ok);
+    if (ok) n++;
+  });
+  const none = document.querySelector('.kb-pal-none');
+  if (none) none.classList.toggle('kb-hidden', n > 0 || !document.querySelector('.kb-pal-fields .kb-chip'));
+}
+
+/* --- fenêtre ------------------------------------------------------------ */
+function autosize() { document.querySelectorAll('.kb-auto').forEach((t) => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }); }
+function renderModal() {
+  const r = records.find((x) => x.id === modalId); if (!r) return;
+  const ov = $('#kbOverlay');
+  const prev = ov.querySelector('.kb-modal-body');
+  const scroll = prev ? prev.scrollTop : 0;
+  const tc = col(cfg.titleCol), de = dataEditing();
+  let head;
+  if (tc && tc.base === 'Text' && !tc.readOnly && de) {
+    const v = tc.colId in pending ? pending[tc.colId] : (r[cfg.titleCol] ?? '');
+    head = `<input class="fr-input" id="kbModalTitle" data-f="${esc(tc.colId)}" data-kind="text" aria-label="${esc(tc.label)}" value="${esc(v)}">`;
+  } else head = `<h2 id="kbModalTitle">${esc((tc && tc.colId in pending ? String(pending[tc.colId]) : displayText(cfg.titleCol, r)) || 'Sans titre')}</h2>`;
+  const body = bodyHtml(r);
+  const modify = !editLayout && canWrite() && cfg.editMethod !== 'direct' && !editing
+    ? '<button class="fr-btn fr-btn--secondary fr-btn--sm fr-icon-pencil-line fr-btn--icon-left" data-act="editData">Modifier</button>' : '';
+  ov.innerHTML = `<div class="kb-modal ${editLayout ? 'kb-editing' : ''}" role="dialog" aria-modal="true" aria-labelledby="kbModalTitle">
+    <div class="kb-modal-head">${head}${modify}
+      ${editLayout || !isOwner ? '' : '<button class="fr-btn fr-btn--tertiary fr-btn--sm fr-icon-edit-line fr-btn--icon-left" data-act="editLayout">Mise en page</button>'}
+      <button class="fr-btn fr-btn--tertiary-no-outline fr-btn--sm fr-icon-close-line" data-act="close" title="Fermer">Fermer</button></div>
+    ${editLayout ? paletteHtml() : ''}
+    <div class="kb-modal-body">${body}</div>
+    <div class="kb-modal-foot">
+      ${editLayout
+        ? '<button class="fr-btn" data-act="doneLayout">Terminer la mise en page</button>'
+        : de ? '<button class="fr-btn fr-btn--secondary" data-act="cancelEdit">Annuler</button><button class="fr-btn" data-act="save">Enregistrer</button>'
+          : '<button class="fr-btn fr-btn--secondary" data-act="close">Fermer</button>'}
+    </div></div>`;
+  ov.classList.add('open');
+  const nb = ov.querySelector('.kb-modal-body'); if (nb) nb.scrollTop = scroll;
+  autosize();
+}
+function openModal(id) {
+  if (!records.some((x) => x.id === id)) return;
+  modalId = id; editLayout = false; pending = {}; editing = false; optIdx = null; palSearch = '';
+  collapsed.clear(); blocks().forEach((b, k) => { if (isSection(b) && b.fold && b.closed) collapsed.add(b.id || ('s' + k)); });   // sections repliées au départ
+  renderModal();
+}
+function closeModal() { $('#kbOverlay').classList.remove('open'); modalId = null; editLayout = false; pending = {}; editing = false; optIdx = null; mdrag = null; }
+const emptyish = (v) => v == null || v === '' || v === 0 || (Array.isArray(v) && !asList(v).length);
+function sameVal(c, a, b) {
+  if (isListType(c) || c.base === 'Attachments') return JSON.stringify(asList(a)) === JSON.stringify(asList(b));
+  if (c.base === 'Date' || c.base === 'DateTime') return toSec(a) === toSec(b);
+  if (c.base === 'Bool') return !!a === !!b;
+  return emptyish(a) && emptyish(b) ? true : a === b;
+}
+async function saveModal() {
+  const r = records.find((x) => x.id === modalId); if (!r) return closeModal();
+  const fields = {};
+  Object.entries(pending).forEach(([k, nv]) => { const c = col(k); if (c && !c.readOnly && !sameVal(c, nv, r[k])) fields[k] = nv; });
+  pending = {}; editing = false;
+  if (Object.keys(fields).length) { await saveFields(r.id, fields); toast('Carte enregistrée'); }
+  if (modalId !== null) renderModal();
+}
+
+/* --- modifications de la mise en page --------------------------------- */
+function enterLayout() {
+  if (!isOwner) return;
+  editLayout = true; optIdx = null; renderModal();
+}
+function saveLayout() { saveCfg(); renderModal(); }
+function newBlock(spec) {
+  if (spec.type === 'heading') return { type: 'heading', text: 'Nouveau titre' };
+  if (spec.type === 'section') return { type: 'section', id: uid(), text: 'Nouvelle section' };
+  if (spec.type === 'divider') return { type: 'divider' };
+  return { col: spec.col, w: defaultWidth(col(spec.col)) };
+}
+/* bloc (ou zone de dépôt) le plus proche du pointeur dans un conteneur, hors élément en cours de déplacement */
+function nearestTarget(e, scope, sel) {
+  let best = null, bd = Infinity;
+  scope.querySelectorAll(sel || '.kb-blk:not(.kb-section), .kb-dropzone').forEach((n) => {
+    if (n.classList.contains('row-dragging') || n.closest('.row-dragging')) return;
+    const r = n.getBoundingClientRect();
+    const dx = Math.max(r.left - e.clientX, 0, e.clientX - r.right), dy = Math.max(r.top - e.clientY, 0, e.clientY - r.bottom);
+    const d = dy * 4 + dx;                               // on privilégie la proximité verticale
+    if (d < bd) { bd = d; best = n; }
+  });
+  return best;
+}
+/* Où tomberait l'élément glissé ? → { pos, el, side } ou null */
+function dropTarget(e) {
+  const L = blocks();
+  const z = e.target.closest && e.target.closest('.kb-dropzone');
+  if (z) return { pos: Number(z.dataset.pos), el: z, side: 'over' };
+  let el = e.target.closest && e.target.closest('.kb-blk');
+  /* lâcher dans un espace entre deux blocs, ou sur le corps d'une section : on vise le bloc le plus proche */
+  const onHead = el && isSection(L[Number(el.dataset.i)]) && e.target.closest('.kb-blk-bar, .kb-sec-input');
+  if (!onHead && mdrag.kind !== 'section' && (!el || isSection(L[Number(el.dataset.i)]))) {
+    const scope = el || e.target.closest('.kb-modal-body');
+    el = scope ? nearestTarget(e, scope) : null;
+    if (el && el.classList.contains('kb-dropzone')) return { pos: Number(el.dataset.pos), el, side: 'over' };
+  } else if (!el && mdrag.kind === 'section') {
+    const body = e.target.closest('.kb-modal-body');
+    el = body ? nearestTarget(e, body, '.kb-section.kb-blk') : null;
+  }
+  if (!el) return null;
+  const i = Number(el.dataset.i), b = L[i], r = el.getBoundingClientRect();
+  if (mdrag.kind === 'section') {              // une section ne se pose qu'entre deux sections
+    const s = isSection(b) ? i : Number(el.dataset.sec);
+    if (s < 0) return null;
+    const secEl = el.closest('.kb-section'), sr = secEl.getBoundingClientRect();
+    return e.clientY > sr.top + sr.height / 2
+      ? { pos: secEnd(s), el: secEl, side: 'after' }
+      : { pos: s, el: secEl, side: 'before' };
+  }
+  if (isSection(b)) {                          // sur l'en-tête d'une section : juste avant, ou en tête de section
+    return e.clientY < r.top + 14 ? { pos: i, el, side: 'before' } : { pos: i + 1, el, side: 'over' };
+  }
+  const half = !b.type && b.w !== 'full';
+  const after = half ? e.clientX > r.left + r.width / 2 : e.clientY > r.top + r.height / 2;
+  return { pos: i + (after ? 1 : 0), el, side: half ? (after ? 'right' : 'left') : (after ? 'after' : 'before') };
+}
+function validPos(pos) {
+  if (mdrag.kind !== 'section') return true;
+  const L = blocks();
+  return (pos === L.length || isSection(L[pos])) && !(pos >= mdrag.from && pos <= mdrag.to);
+}
+function applyDrop(m) {
+  const L = blocks();
+  if (m.kind === 'new') L.splice(m.pos, 0, newBlock(m.spec));
+  else if (m.kind === 'block') {
+    let to = m.pos; if (m.from < to) to--;
+    if (to === m.from) return;
+    const [it] = L.splice(m.from, 1); L.splice(to, 0, it);
+  } else {
+    const n = m.to - m.from, chunk = L.splice(m.from, n);
+    let to = m.pos; if (to > m.from) to -= n;
+    L.splice(to, 0, ...chunk);
+  }
+  saveLayout();
+}
+
+/* ------------------------------------------------------------------ *
+ * Panneau de configuration
+ * ------------------------------------------------------------------ */
+/* On mémorise ce qu'on envoie à Grist pour ignorer son « écho » dans onOptions (sinon une réponse tardive
+   pourrait écraser une modification plus récente faite entre-temps). */
+const sentCfg = [];
+function saveCfg() {
+  if (!isOwner) return;
+  sentCfg.push(JSON.stringify(cfg)); if (sentCfg.length > 12) sentCfg.shift();
+  grist.setOptions({ cfg });
+}
+function persist() { saveCfg(); renderBoard(); renderDrawer(); }
+function renderDrawer() {
+  const d = $('#kbDrawer');
+  if (!meta.loaded) { d.innerHTML = ''; return; }
+  const opt = (arr, sel) => arr.map((c) => `<option value="${esc(c.colId)}" ${c.colId === sel ? 'selected' : ''}>${esc(c.label)}</option>`).join('');
+  const groupable = meta.cols.filter((c) => GROUP_TYPES.includes(c.base));
+  const freeCard = meta.cols.filter((c) => c.colId !== cfg.titleCol && !cfg.cardFields.some((f) => f.col === c.colId));
+  const rows = (name, list) => list.map((f, i) => `<div class="kb-row" draggable="false" data-list="${name}" data-i="${i}">
+        <span class="kb-grip" title="Glisser pour réordonner" aria-label="Glisser pour réordonner">⠿</span>
+        <span class="kb-row-name">${esc(col(f.col)?.label || f.col)}</span>
+        <button class="fr-btn fr-btn--tertiary-no-outline fr-btn--sm fr-icon-delete-line" data-act="rm" data-list="${name}" data-i="${i}" title="Retirer">Retirer</button></div>`).join('');
+  d.innerHTML = `
+    <section style="display:flex;align-items:center;gap:.5rem"><h3 style="flex:1;margin:0">Configuration du kanban</h3>
+      <button class="fr-btn fr-btn--tertiary-no-outline fr-btn--sm fr-icon-close-line" data-act="closeSettings" title="Fermer">Fermer</button></section>
+    <section><h3>Colonnes du kanban</h3>
+      <select class="fr-select" data-cfg="groupCol"><option value="">— Choisir —</option>${opt(groupable, cfg.groupCol)}</select>
+      <p class="fr-hint-text" style="margin-top:.5rem">Liste de choix ou référence.</p></section>
+    <section><h3>Titre de la carte</h3>
+      <select class="fr-select" data-cfg="titleCol">${opt(meta.cols, cfg.titleCol)}</select></section>
+    <section><h3>Champs sous le titre</h3>
+      ${rows('card', cfg.cardFields)}
+      <select class="fr-select" data-cfg="addCard" aria-label="Ajouter un champ à la carte"><option value="">+ Ajouter un champ…</option>${opt(freeCard, '')}</select>
+      <p class="fr-hint-text" style="margin-top:.5rem">Glissez la poignée ⠿ pour réordonner. L’affichage suit le type du champ : pastille pour les choix et références, icône pour les dates, texte sinon. Le titre du champ s’affiche au-dessus de sa valeur.</p></section>
+    <section><h3>Fenêtre de détail</h3>
+      <p class="fr-hint-text">La mise en page (champs, titres, sections, séparateurs, largeurs, options de chaque champ) se règle directement dans la fenêtre : cliquez sur une carte, puis sur « Mise en page ».</p>
+      <label class="fr-label" for="kbEditMethod" style="margin-top:.75rem">Modification des données</label>
+      <select class="fr-select" id="kbEditMethod" data-cfg="editMethod">
+        <option value="button" ${cfg.editMethod !== 'direct' ? 'selected' : ''}>Via le bouton « Modifier »</option>
+        <option value="direct" ${cfg.editMethod === 'direct' ? 'selected' : ''}>Directement dans les champs</option></select></section>`;
+}
+function openSettings() { if (!isOwner) return; renderDrawer(); $('#kbDrawer').classList.add('open'); }
+
+/* ------------------------------------------------------------------ *
+ * Événements
+ * ------------------------------------------------------------------ */
+document.addEventListener('click', async (e) => {
+  const a = e.target.closest('[data-act]');
+  if (!a) {
+    if (e.target.closest('a.kb-link')) return;                 // un lien s'ouvre sans ouvrir la carte
+    const card = e.target.closest('.kb-card');
+    if (card) openModal(Number(card.dataset.id));
+    else if (e.target === $('#kbOverlay')) closeModal();
+    return;
+  }
+  const i = Number(a.dataset.i), idx = Number(a.dataset.idx);
+  switch (a.dataset.act) {
+    case 'settings': openSettings(); break;
+    case 'closeSettings': $('#kbDrawer').classList.remove('open'); break;
+    case 'close': closeModal(); break;
+    case 'save': saveModal(); break;
+    case 'refresh': await loadMeta(); normRecords(); renderBoard(); renderDrawer(); toast('Structure rechargée'); break;
+    case 'rm': cfg.cardFields.splice(i, 1); persist(); break;
+    /* popup : mode mise en page */
+    case 'editLayout': enterLayout(); break;
+    case 'doneLayout': editLayout = false; renderModal(); break;
+    case 'toggleSec': { const k = a.dataset.key; collapsed.has(k) ? collapsed.delete(k) : collapsed.add(k); renderModal(); break; }
+    case 'secFold': { const b = blocks()[i]; if (b) { b.fold = !b.fold; if (!b.fold) delete b.closed; saveLayout(); } break; }
+    case 'secClosed': { const b = blocks()[i]; if (b) { b.closed = !b.closed; saveLayout(); } break; }
+    case 'editData': editing = true; renderModal(); break;
+    case 'cancelEdit': pending = {}; editing = false; if (cfg.editMethod === 'direct') closeModal(); else renderModal(); break;
+    case 'dd': { const d = a.closest('.kb-dd'), open = d.classList.contains('kb-open'); document.querySelectorAll('.kb-dd.kb-open').forEach((n) => n.classList.remove('kb-open')); if (!open) d.classList.add('kb-open'); break; }
+    case 'pick': setPending(a.dataset.col, a.dataset.v); renderModal(); break;
+    case 'addCl': setPending(a.dataset.col, ['L', ...asList(curVal(a.dataset.col)).map(String), a.dataset.v]); renderModal(); break;
+    case 'rmCl': setPending(a.dataset.col, ['L', ...asList(curVal(a.dataset.col)).map(String).filter((v) => v !== a.dataset.v)]); renderModal(); break;
+    case 'addRef': { const c = col(a.dataset.col), id = Number(a.dataset.v); setPending(c.colId, c.base === 'RefList' ? ['L', ...refIds(curVal(c.colId)), id] : id); renderModal(); break; }
+    case 'rmRef': { const c = col(a.dataset.col), id = Number(a.dataset.v); const rest = refIds(curVal(c.colId)).filter((x) => x !== id); setPending(c.colId, c.base === 'RefList' ? ['L', ...rest] : 0); renderModal(); break; }
+    case 'attDl': downloadAtt(Number(a.dataset.v)); break;
+    case 'attRm': { const id = Number(a.dataset.v); setPending(a.dataset.col, ['L', ...refIds(curVal(a.dataset.col)).filter((x) => x !== id)]); renderModal(); break; }
+    case 'attAdd': { const inp = a.parentElement.querySelector('input[type=file]'); if (inp) inp.click(); break; }
+    case 'blkOpt': optIdx = optIdx === i ? null : i; renderModal(); break;
+    case 'setEmoji': { const b = blocks()[i]; if (b) { b.emoji = a.dataset.v; saveCfg(); renderModal(); } break; }
+    case 'setTag': { const b = blocks()[i]; if (b) { b.tag = a.dataset.v; saveCfg(); renderModal(); } break; }
+    case 'blkRm': blocks().splice(i, 1); saveLayout(); break;
+    case 'addBlk': { let spec; try { spec = JSON.parse(a.dataset.spec); } catch (x) { break; } blocks().push(newBlock(spec)); saveLayout(); break; }
+  }
+});
+document.addEventListener('change', (e) => {
+  const t = e.target;
+  if (t.dataset && t.dataset.blk === 'text') {          // texte d'un titre / d'une section (popup) : pas de nouveau rendu, on garde le focus
+    const b = blocks()[Number(t.dataset.i)];
+    if (b) { b.text = t.value; saveCfg(); }
+    return;
+  }
+  const k = t.dataset && t.dataset.cfg; if (!k) return;
+  if (k === 'groupCol') cfg.groupCol = t.value || null;
+  else if (k === 'titleCol') cfg.titleCol = t.value;
+  else if (k === 'editMethod') { cfg.editMethod = t.value === 'direct' ? 'direct' : 'button'; if (modalId !== null) renderModal(); }
+  else if (k === 'addCard') { if (t.value) cfg.cardFields.push({ col: t.value }); }
+  persist();
+});
+/* champs de la popup : saisie, listes déroulantes, pièces jointes */
+const setPending = (colId, v) => { pending[colId] = v; };
+document.addEventListener('input', (e) => {
+  const t = e.target, f = t.dataset && t.dataset.f; if (f === undefined) { if (t.dataset && t.dataset.refsearch !== undefined) {
+    const c = col(t.dataset.refsearch), b = blocks().find((x) => x.col === c.colId), list = t.parentElement.querySelector('.kb-dd-list');
+    if (list) list.innerHTML = refOptions(c, b, t.value);
+  } return; }
+  const k = t.dataset.kind;
+  if (k === 'text') { setPending(f, t.value); if (t.classList.contains('kb-auto')) { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; } }
+  else if (k === 'num') {
+    if (t.value === '') return setPending(f, null);
+    const n = parseFloat(t.value); if (isNaN(n)) return;
+    setPending(f, t.dataset.pct ? +(n / 100).toPrecision(12) : n);
+  }
+});
+document.addEventListener('change', (e) => {
+  const t = e.target, d = t.dataset || {};
+  if (d.opt) {                                            // option d'un champ (mode mise en page)
+    const b = blocks()[Number(d.i)]; if (!b) return;
+    const v = t.type === 'checkbox' ? t.checked : t.value.trim();
+    if (v === '' || v === false) delete b[d.opt]; else b[d.opt] = v;
+    saveCfg(); if (t.type === 'checkbox' || t.tagName === 'SELECT') renderModal();     // les champs texte ne sont pas redessinés : on garde le focus
+    return;
+  }
+  if (d.wsel !== undefined) { const b = blocks()[Number(d.wsel)]; if (b) { b.w = t.value; saveLayout(); } return; }
+  if (d.attfile !== undefined) { uploadFiles(d.attfile, t.files); return; }
+  if (d.f === undefined) return;
+  if (d.kind === 'date') setPending(d.f, t.value ? Date.parse(t.value + 'T00:00:00Z') / 1000 : null);
+  else if (d.kind === 'datetime') setPending(d.f, t.value ? localToSec(t.value, d.tz) : null);
+  else if (t.type === 'checkbox') setPending(d.f, t.checked);
+});
+async function uploadFiles(colId, files) {
+  if (!files || !files.length) return;
+  try {
+    const ids = [];
+    for (const f of files) ids.push(await grist.docApi.uploadAttachment(f));
+    setPending(colId, ['L', ...refIds(curVal(colId)), ...ids]); renderModal(); toast(ids.length + ' fichier(s) ajouté(s)');
+  } catch (e) { toast('Ajout impossible : ' + (e.message || e), true); }
+}
+document.addEventListener('mousedown', (e) => { if (e.target.closest && e.target.closest('.kb-ref .kb-dd-item')) e.preventDefault(); });   // garde le focus dans la recherche
+document.addEventListener('click', (e) => { if (!e.target.closest('.kb-dd')) document.querySelectorAll('.kb-dd.kb-open').forEach((n) => n.classList.remove('kb-open')); });
+$('#kbSearch').addEventListener('input', (e) => { search = e.target.value.trim().toLowerCase(); renderBoard(); });
+document.addEventListener('input', (e) => {             // recherche d'un champ dans la barre d'éléments (pas de nouveau rendu : on garde le focus)
+  if (e.target.dataset && e.target.dataset.blk === 'search') { palSearch = e.target.value; filterPalette(); }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  const t = e.target;
+  if (t && t.dataset && t.dataset.blk === 'search' && t.value) { t.value = ''; palSearch = ''; filterPalette(); return; }   // Échap efface d'abord la recherche
+  closeModal(); $('#kbDrawer').classList.remove('open');
+});
+
+/* Réordonnancement des champs (panneau de configuration) : on ne peut saisir une ligne que par sa poignée */
+let rdrag = null;   // { list: 'card' | 'modal', i, target?: { i, after } }
+const MARKS = ['row-dragging', 'drop-before', 'drop-after', 'drop-left', 'drop-right', 'drop-over'];
+const clearRowMarks = () => document.querySelectorAll(MARKS.map((m) => '.' + m).join(',')).forEach((n) => n.classList.remove(...MARKS));
+const resetGrips = () => document.querySelectorAll('.kb-row[draggable=true],.kb-blk[draggable=true]').forEach((n) => (n.draggable = false));
+document.addEventListener('mousedown', (e) => {
+  const g = e.target.closest && e.target.closest('.kb-grip, .kb-blk-kind');     // poignée ou libellé de la barre
+  const host = g && g.closest('.kb-row, .kb-blk');
+  if (host) host.draggable = true;
+});
+document.addEventListener('mouseup', resetGrips);
+document.addEventListener('dragstart', (e) => {
+  /* popup : élément de la palette ou bloc saisi par sa poignée */
+  const chip = e.target.closest && e.target.closest('.kb-chip');
+  const blk = !chip && e.target.closest && e.target.closest('.kb-blk');
+  if (chip || blk) {
+    if (chip) { try { mdrag = { kind: 'new', spec: JSON.parse(chip.dataset.spec) }; } catch (x) { return; } }
+    else {
+      const i = Number(blk.dataset.i), b = blocks()[i];
+      mdrag = isSection(b) ? { kind: 'section', from: i, to: secEnd(i) } : { kind: 'block', from: i };
+      blk.classList.add('row-dragging');
+    }
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', 'bloc'); } catch (x) {}
+    return;
+  }
+  const row = e.target.closest && e.target.closest('.kb-row');
+  if (row) {
+    rdrag = { list: row.dataset.list, i: Number(row.dataset.i) };
+    row.classList.add('row-dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', 'field'); } catch (x) {}
+    return;
+  }
+  const card = e.target.closest && e.target.closest('.kb-card'); if (!card) return;
+  drag = { id: Number(card.dataset.id), from: Number(card.dataset.idx) };
+  card.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  try { e.dataTransfer.setData('text/plain', String(drag.id)); } catch (x) {}
+});
+document.addEventListener('dragend', () => {
+  drag = null; rdrag = null; mdrag = null; clearRowMarks(); resetGrips();
+  document.querySelectorAll('.dragging,.drag-over').forEach((n) => n.classList.remove('dragging', 'drag-over'));
+});
+document.addEventListener('dragover', (e) => {
+  if (mdrag) {
+    const t = dropTarget(e);
+    const keep = mdrag.kind === 'block' || mdrag.kind === 'section' ? document.querySelector('.kb-blk.row-dragging') : null;
+    clearRowMarks(); if (keep) keep.classList.add('row-dragging');
+    mdrag.pos = undefined;
+    if (!t || !validPos(t.pos)) return;
+    e.preventDefault();
+    mdrag.pos = t.pos;
+    t.el.classList.add(({ before: 'drop-before', after: 'drop-after', left: 'drop-left', right: 'drop-right', over: 'drop-over' })[t.side]);
+    return;
+  }
+  if (rdrag) {
+    const row = e.target.closest && e.target.closest('.kb-row');
+    if (!row || row.dataset.list !== rdrag.list) return;
+    e.preventDefault();
+    const r = row.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2;
+    clearRowMarks();
+    document.querySelectorAll('.kb-row').forEach((n) => { if (n.dataset.list === rdrag.list && Number(n.dataset.i) === rdrag.i) n.classList.add('row-dragging'); });
+    row.classList.add(after ? 'drop-after' : 'drop-before');
+    rdrag.target = { i: Number(row.dataset.i), after };
+    return;
+  }
+  const body = e.target.closest && e.target.closest('.kb-col'); if (!body || !drag) return;
+  e.preventDefault();
+  document.querySelectorAll('.drag-over').forEach((n) => n.classList.remove('drag-over'));
+  body.querySelector('.kb-col-body').classList.add('drag-over');
+});
+document.addEventListener('drop', (e) => {
+  if (mdrag) {
+    e.preventDefault();
+    const m = mdrag; mdrag = null; clearRowMarks(); resetGrips();
+    if (m.pos !== undefined) applyDrop(m);
+    return;
+  }
+  if (rdrag) {
+    e.preventDefault();
+    const { list: name, i: from, target } = rdrag;
+    rdrag = null; clearRowMarks();
+    const list = name === 'modal' ? cfg.modalFields : cfg.cardFields;
+    if (!list || !target) return;
+    let to = target.i + (target.after ? 1 : 0);
+    if (from < to) to--;
+    if (to !== from) { const [it] = list.splice(from, 1); list.splice(to, 0, it); persist(); }
+    return;
+  }
+  const colEl = e.target.closest && e.target.closest('.kb-col'); if (!colEl || !drag) return;
+  e.preventDefault();
+  const { id, from } = drag; drag = null;
+  moveCard(id, from, Number(colEl.dataset.idx));
+});
+
+/* ------------------------------------------------------------------ *
+ * Démarrage
+ * ------------------------------------------------------------------ */
+/* Par défaut Grist renvoie le libellé des références, pas leur identifiant : on demande les identifiants
+   (expandRefs: false) et, par sécurité, on retraduit un éventuel libellé en identifiant. */
+function refIdOf(c, v) {
+  if (Array.isArray(v) && v[0] === 'R') v = v[2];        // forme codée ['R', table, identifiant ou libellé]
+  if (typeof v === 'number' || v == null || v === '') return v;
+  const hit = (refs[c.colId]?.rows || []).find((x) => x.label === v);
+  return hit ? hit.id : v;
+}
+function normRecords() {
+  const rc = meta.cols.filter((c) => c.base === 'Ref' || c.base === 'RefList');
+  if (!rc.length) return;
+  records.forEach((r) => rc.forEach((c) => {
+    const v = r[c.colId];
+    if (c.base === 'Ref') r[c.colId] = refIdOf(c, v);
+    else if (Array.isArray(v)) r[c.colId] = ['L', ...asList(v).map((x) => refIdOf(c, x))];
+  }));
+}
+
+grist.ready({ requiredAccess: 'full', onEditOptions: openSettings });
+detectOwner().then((acc) => { accessLevel = acc; isOwner = acc === 'owners'; applyRole(); });
+grist.onOptions((o) => {
+  const c = (o && o.cfg) || {};
+  if (sentCfg.includes(JSON.stringify(c))) return;       // écho de notre propre enregistrement
+  cfg = { groupCol: c.groupCol || cfg.groupCol, titleCol: c.titleCol || cfg.titleCol, cardFields: c.cardFields || cfg.cardFields,
+          modalFields: c.modalFields || cfg.modalFields, editMethod: c.editMethod || cfg.editMethod };
+  renderBoard();
+});
+/* onRecords sert à savoir QUELLES lignes afficher (filtres, liens entre widgets) et à être prévenu des changements.
+   Les valeurs, elles, sont relues en brut (identifiants, dates en nombre, listes ['L', …]) : c'est le seul format
+   fiable, quelle que soit la version de Grist. */
+let loadSeq = 0;
+async function loadRecords(rows) {
+  const seq = ++loadSeq;
+  let raw = null;
+  try { raw = await grist.docApi.fetchTable(meta.tableId || await grist.getTable().getTableId()); } catch (e) {}
+  if (seq !== loadSeq) return;                           // une mise à jour plus récente est arrivée entre-temps
+  if (raw && Array.isArray(raw.id)) {
+    const idx = new Map(raw.id.map((id, i) => [id, i]));
+    const keys = Object.keys(raw).filter((k) => k !== 'id');
+    records = rows.map((row) => {
+      const i = idx.get(row.id);
+      if (i === undefined) return row;
+      const rec = { id: row.id };
+      keys.forEach((k) => { rec[k] = raw[k][i]; });
+      return rec;
+    });
+  } else records = rows;
+  normRecords();
+  renderBoard();
+  if (modalId !== null && !records.some((r) => r.id === modalId)) closeModal();
+}
+grist.onRecords((rows) => { loadRecords(rows); }, { includeColumns: 'shown', keepEncoded: true, expandRefs: false, format: 'rows' });
+renderBoard();
+loadMeta().then(() => {
+  if (!cfg.cardFields.length) {
+    cfg.cardFields = meta.cols.filter((c) => c.colId !== cfg.titleCol && c.colId !== cfg.groupCol && ['Date', 'Choice', 'Ref'].includes(c.base)).slice(0, 3)
+      .map((c) => ({ col: c.colId }));
+  }
+  if (!cfg.modalFields) cfg.modalFields = cfg.cardFields.map((f) => ({ col: f.col, w: defaultWidth(col(f.col)) }));
+  normRecords();
+  renderBoard(); renderDrawer();
+}).catch((e) => { $('#kbBoard').innerHTML = `<div class="kb-empty"><p>Impossible de lire la structure de la table.</p><p class="fr-hint-text">${esc(e.message || e)}<br>Vérifiez que le widget a l’accès « Accès complet au document ».</p></div>`; });
+</script>
+</body>
+</html>
