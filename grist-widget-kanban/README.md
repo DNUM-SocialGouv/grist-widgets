@@ -65,15 +65,28 @@ La configuration est enregistrée avec le widget dans le document Grist.
 ### 4. Mettre en page la fenêtre de détail
 
 1. Cliquez sur une carte, puis sur **Mise en page** en haut de la fenêtre.
-2. Une barre d'éléments apparaît :
-   - **Titre**, **Section** et **Séparateur** ;
-   - les **champs** de la table qui ne sont pas encore placés, avec un champ **Rechercher un champ…** pour les filtrer par nom (sans tenir compte des accents ni des majuscules ; Échap efface la recherche).
+2. Une barre d'éléments d'une seule ligne apparaît (le corps de la fenêtre garde presque toute la hauteur) :
+   - les boutons **Titre**, **Section**, **Séparateur** et **Table liée** ;
+   - un champ **Rechercher un champ à ajouter…** : au clic ou à la saisie, une courte liste déroulante propose les champs de la table qui ne sont pas encore placés (filtre sans accent ni casse ; Échap ferme la liste).
 
-   Glissez un élément à l'endroit voulu dans la fenêtre, ou cliquez dessus pour l'ajouter à la fin.
+   Glissez un élément (bouton ou résultat de recherche) à l'endroit voulu dans la fenêtre, ou cliquez dessus pour l'ajouter à la fin.
 3. Chaque bloc a une poignée ⠿ pour le déplacer, un bouton pour sa largeur (champs) et un bouton **Retirer**. Le texte des titres et des sections se modifie directement.
 4. Cliquez sur **Terminer la mise en page**. En lecture, les sections se replient d'un clic.
 
 Quand un bloc est trop étroit, les boutons de sa barre passent en icônes seules (⚙ options, ✕ retirer…) ; le libellé s'affiche en info-bulle au survol. La largeur de chaque champ se choisit dans la liste de sa barre : **⅓, ½, ⅔ ou pleine largeur** (grille de 6 colonnes, en dehors comme à l'intérieur des sections). Un bloc se saisit par sa poignée ⠿ ou le libellé de sa barre, et peut être lâché sur un bloc, entre deux blocs ou sur le corps d'une section (le bloc le plus proche est alors visé). Pendant la mise en page, les valeurs déjà saisies mais pas encore enregistrées sont conservées. Une **section** peut être rendue **pliable** (bouton « Pliable » dans sa barre), éventuellement **repliée au départ** ; ses champs sont affichés sur un léger fond bleuté. Une section regroupe tous les blocs qui la suivent jusqu'à la section suivante : pour sortir un bloc d'une section, déplacez-le avant celle-ci ; déplacer une section déplace aussi ses blocs.
+
+## Modifier les enregistrements d'une table liée
+
+Cas d'usage : une table *Étude* avec une table *Étape* qui la référence (5 étapes par étude, distinguées par un champ *Type*), et un *Statut* à modifier pour chaque étape sans quitter la fenêtre de l'étude.
+
+1. **Mise en page → Table liée.** Le widget détecte les colonnes des autres tables qui référencent la table du kanban (*Ref* ou *RefList*) ; s'il y en a plusieurs, choisissez la relation dans la liste « Table liée ».
+2. Réglez le bloc : **titre du bloc**, **titre de chaque ligne** (par exemple *Type*), **tri** (par défaut sur le champ du titre ; un champ *Choice* suit l'ordre de ses valeurs dans Grist), puis **ajoutez les champs du modèle** avec « Ajouter un champ… » (recherche dans les champs de la table liée).
+3. Ce **modèle est répété pour chaque enregistrement lié** : une étude à 5 étapes affiche 5 lignes, une étude à 3 étapes en affiche 3, une étude sans étape affiche « Aucun enregistrement lié ». Rien n'est créé automatiquement.
+4. Les champs du modèle se règlent comme ceux de la carte (largeur ⅓ ½ ⅔ plein, nom affiché, icône, texte si vide, lecture seule, couleur des pastilles) et se réordonnent par glisser-déposer. Le bloc peut être rendu pliable et se déplace comme les autres blocs, y compris dans une section.
+5. **Enregistrement** : mêmes règles que les champs de la carte (bouton « Modifier » puis Enregistrer, ou modification directe). Les modifications de la carte **et** des enregistrements liés partent **en une seule opération Grist** : tout est enregistré, ou rien (en cas de refus, par exemple par une règle d'accès, l'affichage revient à l'état précédent). Seuls les champs réellement modifiés sont envoyés. Les colonnes formules ne sont pas modifiables.
+6. Les données de la table liée sont relues à chaque ouverture de la fenêtre. Pour la structure (nouveau choix, colonne renommée…), utilisez **Recharger**.
+
+Les droits d'accès Grist sur la table liée s'appliquent comme pour n'importe quelle modification. Le widget doit avoir l'accès complet au document.
 
 ## Fenêtre de détail : même fonctionnement que la fiche
 
@@ -108,11 +121,14 @@ Le bouton **Configurer**, le panneau de configuration et le mode **Mise en page*
 
 Ouvrez `index.html` directement dans un navigateur : le widget passe en **mode démo** avec des données fictives (le badge « Mode démo » s'affiche en bas à gauche). Pratique pour travailler le design sans document Grist.
 
+Le mode démo inclut une table liée « Etapes » (5 étapes pour le premier ticket) pour tester le bloc « Table liée ».
+
 Pour simuler un autre rôle, ajoutez un paramètre à l'URL : `?role=owners`, `?role=editors`, `?role=viewers`, `?role=error` (échec de la détection), `?role=probe-owner` ou `?role=probe-other` (réponse sans champ `access`, détection par sonde de secours).
 
 ## Limites connues
 
 - L'ordre des cartes à l'intérieur d'une colonne n'est pas géré.
+- Le bloc « Table liée » ne crée ni ne supprime d'enregistrements : il affiche et modifie ceux qui existent. Les champs d'une table liée ne sont pas affichés sur les cartes du kanban.
 - Les valeurs *DateTime* sont lues et écrites sans tenir compte du fuseau horaire de la colonne.
 - Les styles DSFR et les icônes sont chargés depuis le CDN jsDelivr (`@gouvfr/dsfr@1.12.1`) : une connexion internet est nécessaire. Pour une utilisation hors ligne ou sans CDN, hébergez les fichiers DSFR avec le widget et modifiez les deux balises `<link>` en tête de `index.html`.
 - Les cartes se mettent à jour en direct, mais la structure (liste des colonnes, choix d'une liste de choix, contenu des tables référencées) est lue au chargement : utilisez le bouton **Recharger** après l'avoir modifiée dans Grist (nouveau choix, nouvelle personne dans une table référencée, colonne renommée…).

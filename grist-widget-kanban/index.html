@@ -138,7 +138,7 @@
   .kb-blk { border: 1px dashed transparent; border-radius: 4px; padding: .25rem .375rem 0; margin-bottom: .25rem; }
   .kb-blk:hover { border-color: var(--border-default-grey, #bbb); }
   /* en mode mise en page, le contenu des champs ne capte pas la souris : le bloc entier reste une cible de dépôt (les champs désactivés n'émettent pas d'événements de glisser) */
-  .kb-blk:not(.kb-section) > :not(.kb-blk-bar):not(.kb-heading-input):not(.kb-opts) { pointer-events: none; }
+  .kb-blk:not(.kb-section) > :not(.kb-blk-bar):not(.kb-heading-input):not(.kb-opts):not(.kb-lk-inner) { pointer-events: none; }
   .kb-blk-bar { display: flex; align-items: center; gap: .5rem; font-size: .75rem; color: var(--text-mention-grey, #666); margin-bottom: .25rem; }
   .kb-blk-kind { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .kb-mini { background: #fff; border: 1px solid var(--border-default-grey, #ccc); border-radius: 3px; font-size: .75rem; padding: 0 .5rem; cursor: pointer; line-height: 1.375rem; }
@@ -158,19 +158,37 @@
   .kb-mini:hover { border-color: var(--text-action-high-blue-france, #000091); }
   .kb-dropzone { border: 1px dashed var(--border-default-grey, #bbb); border-radius: 4px; color: var(--text-mention-grey, #888);
                  font-size: .8125rem; text-align: center; padding: .375rem; margin: .25rem 0 .75rem; }
-  .kb-dropzone.drop-over, .kb-blk.drop-over { background: #ececfe; border-color: var(--text-action-high-blue-france, #000091); box-shadow: none; }
+  .kb-dropzone.drop-over, .kb-blk.drop-over, .kb-tf.drop-over { background: #ececfe; border-color: var(--text-action-high-blue-france, #000091); box-shadow: none; }
   .kb-hidden { display: none !important; }
-  .kb-palette { padding: .5rem 1.5rem; background: var(--background-alt-grey, #f6f6f6); border-bottom: 1px solid var(--border-default-grey, #ddd); }
-  .kb-pal-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .375rem .5rem; margin-bottom: .375rem; }
-  .kb-pal-row:first-child { align-items: center; }
-  .kb-pal-search { flex: 1; min-width: 10rem; max-width: 16rem; margin-left: auto; }
-  .kb-pal-fields { display: flex; flex-wrap: wrap; gap: .375rem .5rem; flex: 1; max-height: 5.5rem; overflow-y: auto; align-items: center; }
-  .kb-pal-label { font-size: .75rem; font-weight: 700; color: var(--text-mention-grey, #666); margin-right: .125rem; line-height: 1.75rem; }
-  .kb-pal-hint { font-size: .75rem; color: var(--text-mention-grey, #666); }
+  .kb-palette { display: flex; flex-wrap: wrap; align-items: center; gap: .375rem .5rem; padding: .5rem 1.5rem; background: var(--background-alt-grey, #f6f6f6); border-bottom: 1px solid var(--border-default-grey, #ddd); }
+  .kb-pal-label { font-size: .75rem; font-weight: 700; color: var(--text-mention-grey, #666); margin-right: .125rem; }
+  .kb-pal-find { position: relative; flex: 1; min-width: 11rem; max-width: 20rem; margin-left: auto; }
+  .kb-pop { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; min-width: 14rem; max-height: 15rem; overflow-y: auto; z-index: 65; background: #fff; border: 1px solid var(--border-default-grey, #ddd); border-radius: 4px; box-shadow: 0 4px 16px rgba(0,0,0,.14); padding: 4px; }
+  .kb-pop.open { display: block; }
+  .kb-pop-item { display: flex; align-items: center; gap: .5rem; width: 100%; text-align: left; border: 0; background: none; cursor: pointer; padding: 5px 8px; border-radius: 2px; font: inherit; font-size: .8125rem; color: var(--text-default-grey, #3a3a3a); }
+  .kb-pop-item[draggable=true] { cursor: grab; }
+  .kb-pop-item:hover, .kb-pop-item:focus { background: var(--background-alt-blue-france, #f5f5fe); outline: none; }
+  .kb-pop-grip { color: var(--text-mention-grey, #666); }
+  .kb-pop-type { margin-left: auto; font-size: .6875rem; color: var(--text-mention-grey, #666); }
   .kb-chip { border: 1px dashed var(--text-action-high-blue-france, #000091); background: #fff; border-radius: 1rem; padding: .125rem .75rem;
              font: inherit; font-size: .8125rem; cursor: grab; color: var(--text-default-grey, #3a3a3a); }
-  .kb-chip:hover { background: #ececfe; }
+  .kb-chip:hover { background: var(--background-alt-blue-france, #f5f5fe); }
   .kb-chip-el { font-weight: 700; border-style: solid; }
+  /* bloc « Table liée » : un modèle de champs répété pour chaque enregistrement lié */
+  .kb-lk-body { display: flex; flex-direction: column; gap: .5rem; }
+  .kb-lk-title { margin-bottom: .5rem; font-weight: 700; }
+  .kb-lk-title .kb-val { font-weight: 700; }
+  .kb-lk-cfg { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem 1rem; margin-bottom: .5rem; font-size: .75rem; }
+  .kb-lk-cfg label { display: flex; flex-direction: column; gap: 2px; min-width: 9rem; }
+  .kb-lk-add { position: relative; flex: 1; min-width: 11rem; max-width: 18rem; }
+  .kb-lk-hint { margin: 0 0 .5rem; }
+  .kb-lk-tpl { padding-bottom: .5rem; margin-top: .25rem; }
+  .kb-tf { border: 1px dashed transparent; border-radius: 4px; padding: .25rem .375rem 0; margin-bottom: .25rem; background: #fff; container-type: inline-size; container-name: blk; }
+  .kb-tf:hover { border-color: var(--border-default-grey, #bbb); }
+  .kb-tf > :not(.kb-blk-bar):not(.kb-opts) { pointer-events: none; }
+  .kb-tf-end { border: 1px dashed var(--border-default-grey, #bbb); border-radius: 4px; color: var(--text-mention-grey, #888); font-size: .8125rem; text-align: center; padding: .375rem; margin: .25rem 0 .5rem; background: #fff; }
+  .kb-tf-end.drop-over { background: var(--background-alt-blue-france, #f5f5fe); border-color: var(--text-action-high-blue-france, #000091); }
+  .kb-section.kb-collapsed .kb-lk-body { display: none; }
   .kb-toast { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); background: #3a3a3a; color: #fff;
               padding: .5rem 1rem; border-radius: 4px; z-index: 60; display: none; font-size: .875rem; }
   .kb-toast.err { background: #ce0500; }
@@ -207,6 +225,19 @@ if (!IN_GRIST) {
   ];
   const people = { id: [1, 2, 3], Nom: ['Camille Durand', 'Sami Benali', 'Inès Martin'], Service: [1, 2, 1] };
   const services = { id: [1, 2], Nom: ['Produit', 'Données'] };
+  const etapes = {   /* 5 étapes par ticket (une par valeur de « Type »), dans le désordre pour tester le tri ; le ticket 3 n'en a que 3, les tickets 4 et 5 aucune */
+    id: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+    Ticket: [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3],
+    Type: ['Réalisation', 'Cadrage', 'Déploiement', 'Conception', 'Recette', 'Cadrage', 'Conception', 'Réalisation', 'Recette', 'Déploiement', 'Cadrage', 'Conception', 'Réalisation'],
+    Statut: ['En cours', 'Terminée', 'Non démarrée', 'Terminée', 'Non démarrée', 'En cours', 'Non démarrée', 'Non démarrée', 'Non démarrée', 'Non démarrée', 'Terminée', 'En cours', 'Non démarrée'],
+    Fin: [1795132800, 1792713600, null, 1793318400, null, null, null, null, null, null, null, null, null],
+    Note: ['', 'Validé en atelier', '', '', '', '', '', '', '', '', '', '', ''],
+  };
+  const ecols = [['Ticket', 'Ref:Tickets'], ['Type', 'Choice'], ['Statut', 'Choice'], ['Fin', 'Date'], ['Note', 'Text']];
+  const ewopts = {
+    Type: { choices: ['Cadrage', 'Conception', 'Réalisation', 'Recette', 'Déploiement'] },
+    Statut: { choices: ['Non démarrée', 'En cours', 'Terminée'], choiceOptions: { 'En cours': { fillColor: '#FEECC2', textColor: '#000' }, Terminée: { fillColor: '#C3FAD5', textColor: '#18753C' } } },
+  };
   const tcols = [
     ['Titre', 'Text'], ['Statut', 'Choice'], ['Responsable', 'Ref:Personnes'], ['Echeance', 'Date'],
     ['Priorite', 'Choice'], ['Tags', 'ChoiceList'], ['Description', 'Text'],
@@ -253,8 +284,19 @@ if (!IN_GRIST) {
     docApi: {
       async getAccessToken() { return { baseUrl: 'https://mock.invalid/api/docs/demo', token: 'demo-token' }; },
       async uploadAttachment(f) { return 99; },
+      async applyUserActions(actions) {     /* simulation : un seul appel = une seule opération (tout ou rien) */
+        window.__applied = (window.__applied || []).concat([JSON.parse(JSON.stringify(actions))]);
+        if (window.__failApply) throw new Error('Refusé par les règles d’accès (simulation)');
+        actions.forEach(([op, t, id, f]) => {
+          if (op !== 'UpdateRecord') throw new Error('Action non gérée : ' + op);
+          if (t === 'Tickets') Object.assign(mockRows.find((r) => r.id === id), f);
+          else if (t === 'Etapes') { const i = etapes.id.indexOf(id); Object.entries(f).forEach(([c, v]) => { etapes[c][i] = v; }); }
+        });
+        cbs(mockRows.map((r) => ({ ...r })));
+      },
       async fetchTable(name) {
-        if (name === '_grist_Tables') return { id: [1, 2, 3], tableId: ['Tickets', 'Personnes', 'Services'] };
+        if (name === '_grist_Tables') return { id: [1, 2, 3, 4], tableId: ['Tickets', 'Personnes', 'Services', 'Etapes'] };
+        if (name === 'Etapes') return JSON.parse(JSON.stringify(etapes));
         if (name === 'Services') return services;
         if (name === 'Tickets') { const o = { id: mockRows.map((r) => r.id) }; tcols.forEach(([c]) => { o[c] = mockRows.map((r) => r[c]); }); return o; }
         if (name === 'OwnerAccess') { if (DEMO_ROLE === 'acl-owner') return { id: [1] }; throw new Error('Access denied'); }   // sonde ACL simulée
@@ -270,6 +312,10 @@ if (!IN_GRIST) {
         out.widgetOptions.push(''); out.visibleCol.push(0); out.isFormula.push(false); out.description.push('');
         out.id.push(51); out.parentId.push(2); out.parentPos.push(1); out.colId.push('Service'); out.label.push('Service'); out.type.push('Ref:Services');
         out.widgetOptions.push(''); out.visibleCol.push(52); out.isFormula.push(false); out.description.push('');
+        ecols.forEach(([c, t], i) => {
+          out.id.push(60 + i); out.parentId.push(4); out.parentPos.push(i); out.colId.push(c); out.label.push(c === 'Fin' ? 'Date de fin' : c);
+          out.description.push(''); out.type.push(t); out.widgetOptions.push(JSON.stringify(ewopts[c] || {})); out.visibleCol.push(c === 'Ticket' ? 10 : 0); out.isFormula.push(false);
+        });
         out.id.push(52); out.parentId.push(3); out.parentPos.push(0); out.colId.push('Nom'); out.label.push('Nom'); out.type.push('Text');
         out.widgetOptions.push(''); out.visibleCol.push(0); out.isFormula.push(false); out.description.push('');
         return out;
@@ -305,6 +351,14 @@ const HIDE = /^(gristHelper_|manualSort)/;
 const GROUP_TYPES = ['Choice', 'ChoiceList', 'Ref', 'RefList'];
 
 let cfg = { groupCol: null, titleCol: null, cardFields: [], modalFields: null, editMethod: 'button' };
+let schema = null;        // métadonnées brutes de toutes les tables { C, T, tName, metaOfRow, idToColId }
+let reverseRefs = [];     // colonnes d'autres tables qui référencent la table du kanban : [{ table, col, colLabel }]
+const tmeta = {};         // tableId -> { cols, by } (colonnes d'une table quelconque)
+const vcols = {};         // colonnes « virtuelles » d'un enregistrement lié (clé 'L|table|ligne|colonne')
+const linkData = {};      // tableId -> table lue en brut (undefined = pas encore lue, null = illisible)
+const linkIdx = {};       // tableId -> Map(identifiant de ligne -> position)
+const lrefs = {};         // 'table|colonne' -> libellés des références d'une table liée
+const lrefsDone = new Set();
 let meta = { loaded: false, tableId: '', cols: [], by: {} };
 let refs = {};            // colId -> { rows:[{id,label}], map:{id:label} }
 let records = [];
@@ -315,7 +369,10 @@ let defsCache = [];
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const col = (id) => meta.by[id];
+const isLkKey = (k) => typeof k === 'string' && k.startsWith('L|');
+const lkKey = (t, row, cid) => 'L|' + t + '|' + row + '|' + cid;
+const col = (id) => meta.by[id] || (isLkKey(id) ? vcol(id) : undefined);
+const refsOf = (c) => refs[c.colId] || (c.lkTable ? lrefs[c.lkTable + '|' + c.realCol] : undefined);
 const isListType = (c) => c && (c.base === 'ChoiceList' || c.base === 'RefList');
 const asList = (v) => {
   let a = Array.isArray(v) ? (v[0] === 'L' ? v.slice(1) : v) : (v == null ? [] : [v]);
@@ -414,6 +471,79 @@ async function labelMap(tableId, visRow, depth) {
   });
   return out;
 }
+/* colonnes d'une table (identifiant de ligne de _grist_Tables) */
+function buildCols(tRow) {
+  const { C, idToColId, metaOfRow } = schema, out = [];
+  C.id.forEach((id, i) => {
+    if (C.parentId[i] !== tRow || HIDE.test(C.colId[i])) return;
+    const m = metaOfRow[id];
+    out.push({
+      colId: C.colId[i], label: C.label[i] || C.colId[i], type: m.type, base: m.base, tz: m.tz, pos: C.parentPos ? C.parentPos[i] : i,
+      refTable: m.base === 'Ref' || m.base === 'RefList' ? (m.type.split(':')[1] || null) : null,
+      visCol: C.visibleCol && C.visibleCol[i] ? idToColId[C.visibleCol[i]] : null, visRow: C.visibleCol && C.visibleCol[i] ? C.visibleCol[i] : 0,
+      visMeta: C.visibleCol && C.visibleCol[i] ? metaOfRow[C.visibleCol[i]] : null,   // format de la colonne affichée d'une référence
+      opts: m.opts, readOnly: !!C.isFormula[i], description: ((C.description && C.description[i]) || '').toString().trim(),
+    });
+  });
+  return out.sort((a, b) => a.pos - b.pos);
+}
+function tableMeta(tid) {
+  if (tmeta[tid]) return tmeta[tid];
+  if (!schema) return { cols: [], by: {} };
+  const row = Number(Object.keys(schema.tName).find((k) => schema.tName[k] === tid));
+  const cols = row ? buildCols(row) : [];
+  return (tmeta[tid] = { cols, by: Object.fromEntries(cols.map((c) => [c.colId, c])) });
+}
+function vcol(k) {
+  if (vcols[k]) return vcols[k];
+  const p = k.split('|'), base = tableMeta(p[1]).by[p[3]];
+  if (!base) return undefined;
+  return (vcols[k] = Object.assign(Object.create(base), { colId: k, realCol: p[3], lkTable: p[1] }));
+}
+const isLkb = (b) => !!b && b.type === 'linked';
+/* lecture des tables liées (au chargement, à l'ouverture de la fenêtre et au rechargement) */
+async function loadLinked(force) {
+  const tabs = new Set();
+  blocks().forEach((b) => { if (isLkb(b) && b.lk && b.lk.table) tabs.add(b.lk.table); });
+  await Promise.all([...tabs].map(async (t) => {
+    try { const d = await grist.docApi.fetchTable(t); linkData[t] = d; linkIdx[t] = new Map((d.id || []).map((id, i) => [id, i])); }
+    catch (e) { linkData[t] = null; linkIdx[t] = null; }
+    if (force || !lrefsDone.has(t)) {
+      lrefsDone.add(t);
+      await Promise.all(tableMeta(t).cols.filter((c) => c.refTable).map(async (c) => {
+        try {
+          const lm = await labelMap(c.refTable, c.visRow, 0), rows = Object.keys(lm).map((id) => ({ id: Number(id), label: lm[id] }));
+          lrefs[t + '|' + c.colId] = { rows, map: Object.fromEntries(rows.map((r) => [r.id, r.label])) };
+        } catch (e) { lrefs[t + '|' + c.colId] = { rows: [], map: {} }; }
+      }));
+    }
+  }));
+}
+function lkVal(t, row, cid) {
+  const d = linkData[t], m = linkIdx[t]; if (!d || !m) return undefined;
+  const i = m.get(row); return i === undefined ? undefined : (d[cid] || [])[i];
+}
+/* enregistrements liés à une carte, triés (par défaut sur le champ du titre ; un choix suit l'ordre de ses valeurs dans Grist) */
+function linkedRows(lk, recId) {
+  const d = linkData[lk.table]; if (!d || !Array.isArray(d.id)) return [];
+  const rc = d[lk.refCol] || [], rows = [];
+  d.id.forEach((id, i) => { const v = rc[i]; if (v === recId || (Array.isArray(v) && asList(v).includes(recId))) rows.push({ id, i }); });
+  const sc = tableMeta(lk.table).by[lk.sortCol || lk.titleCol];
+  if (sc) {
+    const vals = d[sc.colId] || [];
+    const key = (r) => {
+      const v = vals[r.i];
+      if (sc.base === 'Choice') { const n = ((sc.opts && sc.opts.choices) || []).indexOf(v); return n < 0 ? 1e9 : n; }
+      if (sc.base === 'Numeric' || sc.base === 'Int') return typeof v === 'number' ? v : 1e15;
+      if (sc.base === 'Bool') return v ? 1 : 0;
+      if (sc.base === 'Date' || sc.base === 'DateTime') { const t = toSec(v); return t == null ? 1e15 : t; }
+      if (sc.base === 'Ref') { const R = lrefs[lk.table + '|' + sc.colId]; return String(R ? (R.map[v] ?? '') : v ?? ''); }
+      return String(v ?? '');
+    };
+    rows.sort((a, b) => { const x = key(a), y = key(b); const c = typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y), 'fr'); return c || a.id - b.id; });
+  }
+  return rows;
+}
 async function loadMeta() {
   const tid = await grist.getTable().getTableId();
   const [T, C, DI] = await Promise.all([
@@ -424,6 +554,8 @@ async function loadMeta() {
   Object.keys(metaRows).forEach((k) => delete metaRows[k]);
   Object.keys(altLabels).forEach((k) => delete altLabels[k]);
   Object.keys(tableCols).forEach((k) => delete tableCols[k]);
+  [tmeta, vcols, linkData, linkIdx, lrefs].forEach((o) => Object.keys(o).forEach((k) => delete o[k]));
+  lrefsDone.clear();
   const tName = {}; T.id.forEach((id, i) => { tName[id] = T.tableId[i]; });
   C.id.forEach((id, i) => { const tn = tName[C.parentId[i]]; if (tn && !HIDE.test(C.colId[i])) (tableCols[tn] = tableCols[tn] || []).push({ id, colId: C.colId[i], label: C.label[i] || C.colId[i] }); });
   const tRef = T.id[T.tableId.indexOf(tid)];
@@ -435,20 +567,14 @@ async function loadMeta() {
     let o = {}; try { o = JSON.parse(C.widgetOptions[i] || '{}') || {}; } catch (e) {}
     metaOfRow[id] = { base, type, tz: base === 'DateTime' ? (arg || null) : null, opts: o, colId: C.colId[i], refTable: (base === 'Ref' || base === 'RefList') ? (arg || null) : null, visRow: C.visibleCol && C.visibleCol[i] ? C.visibleCol[i] : 0 };
   });
-  const cols = [];
+  schema = { C, T, tName, metaOfRow, idToColId };
+  reverseRefs = [];
   C.id.forEach((id, i) => {
-    if (C.parentId[i] !== tRef || HIDE.test(C.colId[i])) return;
-    const m = metaOfRow[id];
-    cols.push({
-      colId: C.colId[i], label: C.label[i] || C.colId[i], type: m.type, base: m.base, tz: m.tz, pos: C.parentPos ? C.parentPos[i] : i,
-      refTable: m.base === 'Ref' || m.base === 'RefList' ? (m.type.split(':')[1] || null) : null,
-      visCol: C.visibleCol && C.visibleCol[i] ? idToColId[C.visibleCol[i]] : null, visRow: C.visibleCol && C.visibleCol[i] ? C.visibleCol[i] : 0,
-      visMeta: C.visibleCol && C.visibleCol[i] ? metaOfRow[C.visibleCol[i]] : null,   // format de la colonne affichée d'une référence
-      opts: m.opts, readOnly: !!C.isFormula[i], description: ((C.description && C.description[i]) || '').toString().trim(),
-    });
+    const m = metaOfRow[id], tn = tName[C.parentId[i]];
+    if (m.refTable === tid && tn && !/^_grist|_summary_/.test(tn) && !HIDE.test(C.colId[i])) reverseRefs.push({ table: tn, col: C.colId[i], colLabel: C.label[i] || C.colId[i] });
   });
+  const cols = buildCols(tRef);
   Object.assign(metaRows, metaOfRow);
-  cols.sort((a, b) => a.pos - b.pos);
   meta = { loaded: true, tableId: tid, cols, by: Object.fromEntries(cols.map((c) => [c.colId, c])) };
   refs = {};
   await Promise.all(cols.filter((c) => c.refTable).map(async (c) => {
@@ -604,7 +730,7 @@ const fmtOf = (c) => c.fmt || (c.fmt = makeFmt(c));
 
 function valueList(c, raw) {
   switch (c.base) {
-    case 'Ref': case 'RefList': return asList(raw).map((id) => (refs[c.colId]?.map[id] ?? String(id)));
+    case 'Ref': case 'RefList': return asList(raw).map((id) => (refsOf(c)?.map[id] ?? String(id)));
     case 'Choice': case 'ChoiceList': return asList(raw).map(String);
     case 'Date': case 'DateTime': case 'Numeric': case 'Int': { const s = fmtOf(c)(raw); return s === '' ? [] : [s]; }
     case 'Bool': return [fmtOf(c)(raw)];
@@ -786,11 +912,28 @@ const tagOf = (k) => TAG_COLORS.find((t) => t.key === k) || TAG_COLORS[0];
 let pending = {};        // valeurs modifiées, pas encore enregistrées { colId: valeur }
 let editing = false;     // mode « Modifier » (méthode « bouton »)
 let optIdx = null;       // bloc dont le panneau d'options est ouvert (mode mise en page)
+let tfOpen = null;       // champ du modèle d'un bloc « Table liée » dont les options sont ouvertes ('bloc:champ')
 const canWrite = () => accessLevel !== 'viewers';
 const dataEditing = () => !editLayout && canWrite() && (cfg.editMethod === 'direct' || editing);
 const refIds = (v) => asList(v).filter((x) => typeof x === 'number' && x > 0);
 const lockedField = (c, b) => !!(c.readOnly || (b && b.ro));
-const curVal = (colId) => (colId in pending ? pending[colId] : ((records.find((x) => x.id === modalId) || {})[colId]));
+const curVal = (colId) => {
+  if (colId in pending) return pending[colId];
+  if (isLkKey(colId)) { const p = colId.split('|'); return lkVal(p[1], Number(p[2]), p[3]); }
+  return (records.find((x) => x.id === modalId) || {})[colId];
+};
+/* bloc (ou champ du modèle d'un bloc « Table liée ») correspondant à la clé d'un champ de la fenêtre */
+function blockForKey(k) {
+  if (isLkKey(k)) {
+    const p = k.split('|');
+    for (const b of blocks()) if (isLkb(b) && b.lk && b.lk.table === p[1]) { const f = (b.fields || []).find((x) => x.col === p[3]); if (f) return f; }
+    return undefined;
+  }
+  return blocks().find((x) => !x.type && x.col === k);
+}
+const TYPE_LABELS = { Text: 'Texte', Numeric: 'Nombre', Int: 'Entier', Bool: 'Case', Date: 'Date', DateTime: 'Date-heure', Choice: 'Choix', ChoiceList: 'Liste de choix', Ref: 'Référence', RefList: 'Liste de réf.', Attachments: 'Pièces jointes' };
+const typeLabel = (c) => TYPE_LABELS[c.base] || c.base;
+const defaultTitleCol = (tb, rc) => { const cs = tableMeta(tb).cols.filter((c) => c.colId !== rc); return (cs.find((c) => c.base === 'Choice') || cs.find((c) => c.base === 'Text') || cs[0] || {}).colId || ''; };
 
 /* style de colonne défini dans Grist (couleur du texte, fond, gras, italique…) */
 function colStyle(c) {
@@ -822,7 +965,7 @@ function isEmptyVal(c, raw) {
 /* libellés d'une référence : colonne affichée dans Grist, ou colonne choisie pour ce champ (option « Champ affiché ») */
 const altLabels = {};
 function refMap(c, b) {
-  const base = (refs[c.colId] && refs[c.colId].map) || {};
+  const base = (refsOf(c) && refsOf(c).map) || {};
   if (!b || !b.refField) return base;
   const k = c.refTable + '|' + b.refField;
   if (altLabels[k]) return altLabels[k];
@@ -959,18 +1102,21 @@ function fieldBlockHtml(b, i, r) {
   return cellHtml(b, c, b.col in pending ? pending[b.col] : r[b.col], b.w === 'full');
 }
 /* panneau d'options d'un champ (mode mise en page) */
-function optsHtml(b, i) {
-  const c = col(b.col); if (!c) return '';
+function optsHtml(b, i, c0, tf) {
+  const c = c0 || col(b.col); if (!c) return '';
+  const at = (n) => (tf ? `data-topt="${n}" data-bi="${tf.bi}" data-fi="${tf.fi}"` : `data-opt="${n}" data-i="${i}"`);
+  const ids = tf ? `data-i="${tf.bi}" data-fi="${tf.fi}"` : `data-i="${i}"`;
+  const aEmoji = tf ? 'tfEmoji' : 'setEmoji', aTag = tf ? 'tfTag' : 'setTag';
   const isRef = c.base === 'Ref' || c.base === 'RefList';
   const refCols = isRef ? (tableCols[c.refTable] || []) : [];
   return `<div class="kb-opts">
-    <label>Nom affiché<input class="fr-input fr-input--sm" data-opt="label" data-i="${i}" value="${esc(b.label || '')}" placeholder="${esc(c.label)}"></label>
-    <label>Texte si vide<input class="fr-input fr-input--sm" data-opt="empty" data-i="${i}" value="${esc(b.empty || '')}" placeholder="Non renseigné"></label>
-    <label>Icône<input class="fr-input fr-input--sm kb-emoji-in" data-opt="emoji" data-i="${i}" value="${esc(b.emoji || '')}" maxlength="4" placeholder="—"></label>
-    <div class="kb-emojis">${EMOJIS.map((e) => `<button type="button" class="kb-emoji-btn" data-act="setEmoji" data-i="${i}" data-v="${esc(e)}">${e}</button>`).join('')}</div>
-    <label class="kb-opt-check"><input type="checkbox" data-opt="ro" data-i="${i}" ${b.ro ? 'checked' : ''}> Lecture seule (jamais modifiable dans ce widget)</label>
-    ${isRef ? `<label>Champ affiché<select class="fr-select fr-select--sm" data-opt="refField" data-i="${i}"><option value="">Colonne affichée dans Grist</option>${refCols.map((x) => `<option value="${esc(x.colId)}" ${x.colId === b.refField ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}</select></label>
-    <div class="kb-opt-tags">Couleur des pastilles ${TAG_COLORS.map((t) => `<button type="button" class="kb-swatch ${t.key === (b.tag || 'blue') ? 'on' : ''}" data-act="setTag" data-i="${i}" data-v="${t.key}" style="background:${t.bg};color:${t.text}" title="${t.label}">Aa</button>`).join('')}</div>` : ''}
+    <label>Nom affiché<input class="fr-input fr-input--sm" ${at('label')} value="${esc(b.label || '')}" placeholder="${esc(c.label)}"></label>
+    <label>Texte si vide<input class="fr-input fr-input--sm" ${at('empty')} value="${esc(b.empty || '')}" placeholder="Non renseigné"></label>
+    <label>Icône<input class="fr-input fr-input--sm kb-emoji-in" ${at('emoji')} value="${esc(b.emoji || '')}" maxlength="4" placeholder="—"></label>
+    <div class="kb-emojis">${EMOJIS.map((e) => `<button type="button" class="kb-emoji-btn" data-act="${aEmoji}" ${ids} data-v="${esc(e)}">${e}</button>`).join('')}</div>
+    <label class="kb-opt-check"><input type="checkbox" ${at('ro')} ${b.ro ? 'checked' : ''}> Lecture seule (jamais modifiable dans ce widget)</label>
+    ${isRef ? `<label>Champ affiché<select class="fr-select fr-select--sm" ${at('refField')}><option value="">Colonne affichée dans Grist</option>${refCols.map((x) => `<option value="${esc(x.colId)}" ${x.colId === b.refField ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}</select></label>
+    <div class="kb-opt-tags">Couleur des pastilles ${TAG_COLORS.map((t) => `<button type="button" class="kb-swatch ${t.key === (b.tag || 'blue') ? 'on' : ''}" data-act="${aTag}" ${ids} data-v="${t.key}" style="background:${t.bg};color:${t.text}" title="${t.label}">Aa</button>`).join('')}</div>` : ''}
   </div>`;
 }
 function barHtml(b, i, kind) {
@@ -991,6 +1137,8 @@ function blockHtml(b, i, r, sec) {
       : `<h3 class="kb-heading">${esc(b.text || '')}</h3>`;
   } else if (b.type === 'divider') {
     kind = 'Séparateur'; inner = '<hr class="kb-divider">';
+  } else if (isLkb(b)) {
+    return editLayout ? lkLayoutHtml(b, i, r, sec) : `<div class="kb-full">${lkReadHtml(b, i, r)}</div>`;
   } else {
     kind = 'Champ'; full = b.w === 'full';
     inner = fieldBlockHtml(b, i, r);
@@ -1017,6 +1165,74 @@ function sectionHtml(b, i, inner, endPos) {
     <input class="fr-input kb-sec-input" data-blk="text" data-i="${i}" value="${esc(b.text || '')}" placeholder="Titre de la section" aria-label="Titre de la section">
     <div class="kb-sec-body">${inner}<div class="kb-dropzone kb-full" data-pos="${endPos}">Déposez ici</div></div></section>`;
 }
+/* --- bloc « Table liée » : le modèle de champs est répété pour chaque enregistrement lié --------------
+ * { type: 'linked', id, text, fold?, closed?, lk: { table, refCol, titleCol, sortCol }, fields: [{ col, w, label?, … }] }
+ * Les champs d'un enregistrement lié ont une clé 'L|table|ligne|colonne' : ils passent par les mêmes composants
+ * (affichage, saisie, brouillon « pending ») que les champs de la carte et sont enregistrés avec elle. */
+const lkMembers = (b) => (b.fields || []).filter((f) => tableMeta(b.lk.table).by[f.col] && f.col !== b.lk.titleCol);
+function lkTitleHtml(b, rowId) {
+  const tc = b.lk.titleCol && rowId ? vcol(lkKey(b.lk.table, rowId, b.lk.titleCol)) : null;
+  if (!tc) return b.lk.titleCol && editLayout ? '<div class="kb-lk-title kb-full"><span class="fr-hint-text">(titre de chaque ligne)</span></div>' : '';
+  return `<div class="kb-lk-title kb-full">${displayBody(tc, curVal(tc.colId), {})}</div>`;
+}
+function lkRecHtml(b, rowId) {
+  const cells = lkMembers(b).map((f) => { const c = vcol(lkKey(b.lk.table, rowId, f.col)); return c ? cellHtml(f, c, curVal(c.colId)) : ''; }).join('');
+  return `<div class="kb-sec-body kb-lk-rec">${lkTitleHtml(b, rowId)}${cells}</div>`;
+}
+function lkReadHtml(b, i, r) {
+  if (!b.lk || !b.lk.table) return '';
+  const key = b.id || ('l' + i), shut = !!b.fold && collapsed.has(key), text = b.text || 'Enregistrements liés';
+  const head = b.fold
+    ? `<button type="button" class="kb-sec-toggle" data-act="toggleSec" data-key="${esc(key)}" aria-expanded="${!shut}"><span class="kb-chev">${shut ? '▸' : '▾'}</span> ${esc(text)}</button>`
+    : `<h3 class="kb-sec-title">${esc(text)}</h3>`;
+  const rows = linkedRows(b.lk, r.id), d = linkData[b.lk.table];
+  const inner = d === undefined ? '<p class="fr-hint-text">Chargement…</p>'
+    : d === null ? '<p class="fr-hint-text">Table liée illisible (le widget a-t-il l’accès complet au document ?).</p>'
+    : rows.length ? rows.map((x) => lkRecHtml(b, x.id)).join('') : '<p class="fr-hint-text">Aucun enregistrement lié.</p>';
+  return `<section class="kb-section kb-full ${shut ? 'kb-collapsed' : ''}">${head}<div class="kb-lk-body">${inner}</div></section>`;
+}
+function lkBarHtml(b, i) {
+  return `<div class="kb-blk-bar"><span class="kb-grip" title="Glisser pour déplacer" aria-label="Glisser pour déplacer">⠿</span>
+    <span class="kb-blk-kind">Table liée</span>
+    <button type="button" class="kb-mini" data-act="secFold" data-i="${i}" aria-pressed="${!!b.fold}" title="Pliable : ${b.fold ? 'oui' : 'non'} (permet de plier et déplier le bloc)" aria-label="Bloc pliable"><span class="kb-ic" aria-hidden="true">▾</span><span class="kb-tx">Pliable : ${b.fold ? 'oui' : 'non'}</span></button>
+    ${b.fold ? `<button type="button" class="kb-mini" data-act="secClosed" data-i="${i}" aria-pressed="${!!b.closed}" title="Replié au départ : ${b.closed ? 'oui' : 'non'}" aria-label="Replié au départ"><span class="kb-ic" aria-hidden="true">⊟</span><span class="kb-tx">Replié au départ : ${b.closed ? 'oui' : 'non'}</span></button>` : ''}
+    <button type="button" class="kb-mini" data-act="blkRm" data-i="${i}" title="Retirer ce bloc" aria-label="Retirer ce bloc"><span class="kb-ic" aria-hidden="true">✕</span><span class="kb-tx">Retirer</span></button></div>`;
+}
+function tbarHtml(bi, fi, f) {
+  return `<div class="kb-blk-bar"><span class="kb-grip" title="Glisser pour déplacer" aria-label="Glisser pour déplacer">⠿</span>
+    <span class="kb-blk-kind">Champ</span>
+    <select class="kb-wsel" data-twsel="${bi}:${fi}" aria-label="Largeur du champ" title="Largeur du champ : ⅓, ½, ⅔ ou pleine largeur">${[['third', '⅓'], ['half', '½'], ['two', '⅔'], ['full', 'Plein']].map(([v, l]) => `<option value="${v}" ${(f.w || 'half') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+    <button type="button" class="kb-mini" data-act="tfOpt" data-i="${bi}" data-fi="${fi}" aria-expanded="${tfOpen === bi + ':' + fi}" title="Options : nom, icône, texte si vide, lecture seule…" aria-label="Options du champ"><span class="kb-ic" aria-hidden="true">⚙</span><span class="kb-tx">Options ${tfOpen === bi + ':' + fi ? '▴' : '▾'}</span></button>
+    <button type="button" class="kb-mini" data-act="tfRm" data-i="${bi}" data-fi="${fi}" title="Retirer ce champ" aria-label="Retirer ce champ"><span class="kb-ic" aria-hidden="true">✕</span><span class="kb-tx">Retirer</span></button></div>`;
+}
+function tfHtml(b, bi, f, fi, rowId) {
+  const base = tableMeta(b.lk.table).by[f.col];
+  const wrap = (inner, cls) => `<div class="kb-tf ${cls}" draggable="false" data-bi="${bi}" data-fi="${fi}">${tbarHtml(bi, fi, f)}${inner}</div>`;
+  if (!base) return wrap(`<p class="fr-hint-text">Colonne introuvable : ${esc(f.col)}. Retirez ce champ.</p>`, 'kb-full');
+  if (f.col === b.lk.titleCol) return wrap(`<p class="fr-hint-text">« ${esc(base.label)} » est déjà utilisé comme titre. Retirez ce champ.</p>`, 'kb-full');
+  const c = vcol(lkKey(b.lk.table, rowId, f.col));
+  return wrap(`${tfOpen === bi + ':' + fi ? optsHtml(f, bi, base, { bi, fi }) : ''}${cellHtml(f, c, curVal(c.colId))}`, wCls(f.w));
+}
+function lkLayoutHtml(b, i, r, sec) {
+  const lk = b.lk || {}, tm = tableMeta(lk.table), first = linkedRows(lk, r.id)[0], rowId = first ? first.id : 0;
+  const opt = (arr, sel, none) => (none ? `<option value="">${none}</option>` : '') + arr.map((c) => `<option value="${esc(c.colId)}" ${c.colId === sel ? 'selected' : ''}>${esc(c.label)}</option>`).join('');
+  const rel = reverseRefs.map((x) => `<option value="${esc(x.table + '|' + x.col)}" ${x.table === lk.table && x.col === lk.refCol ? 'selected' : ''}>${esc(x.table)} (colonne ${esc(x.colLabel)})</option>`).join('');
+  const others = tm.cols.filter((c) => c.colId !== lk.refCol), n = (b.fields || []).length;
+  return `<div class="kb-blk kb-lkblk kb-full" draggable="false" data-i="${i}" data-sec="${sec}">
+    ${lkBarHtml(b, i)}
+    <div class="kb-lk-inner">
+      <input class="fr-input kb-sec-input" data-blk="text" data-i="${i}" value="${esc(b.text || '')}" placeholder="Titre du bloc (ex. Étapes)" aria-label="Titre du bloc">
+      <div class="kb-lk-cfg">
+        <label>Table liée<select class="fr-select fr-select--sm" data-lk="rel" data-i="${i}">${rel}</select></label>
+        <label>Titre de chaque ligne<select class="fr-select fr-select--sm" data-lk="titleCol" data-i="${i}">${opt(others, lk.titleCol, '— Aucun —')}</select></label>
+        <label>Trier par<select class="fr-select fr-select--sm" data-lk="sortCol" data-i="${i}">${opt(others, lk.sortCol, 'Même champ que le titre')}</select></label>
+        <div class="kb-lk-add"><input type="search" class="fr-input fr-input--sm" data-lkadd="${i}" placeholder="Ajouter un champ…" autocomplete="off" aria-label="Ajouter un champ de la table liée"><div class="kb-pop"></div></div>
+      </div>
+      <p class="fr-hint-text kb-lk-hint">Ce modèle est répété pour chaque enregistrement lié (aperçu sur le premier). Les champs se modifient comme ceux de la carte et sont enregistrés avec elle.</p>
+      <div class="kb-sec-body kb-lk-tpl">${lkTitleHtml(b, rowId)}${(b.fields || []).map((f, fi) => tfHtml(b, i, f, fi, rowId)).join('')}
+        <div class="kb-tf-end kb-full" data-fi="${n}">${n ? 'Déposez ici pour placer en dernier' : 'Aucun champ : utilisez « Ajouter un champ… »'}</div></div>
+    </div></div>`;
+}
 function bodyHtml(r) {
   const L = blocks();
   let out = '', k = 0;
@@ -1032,42 +1248,35 @@ function bodyHtml(r) {
   else if (!out.trim()) out = '<p class="fr-hint-text kb-full">Aucun champ. Cliquez sur « Mise en page » pour en ajouter.</p>';
   return out;
 }
-function paletteHtml() {
-  const used = new Set(blocks().filter((b) => !b.type).map((b) => b.col));
-  const free = meta.cols.filter((c) => c.colId !== cfg.titleCol && !used.has(c.colId));
-  const chip = (spec, label, cls, extra) => `<button type="button" class="kb-chip ${cls || ''}" draggable="true" data-act="addBlk" data-spec="${esc(JSON.stringify(spec))}" ${extra || ''}>${label}</button>`;
-  const q = norm(palSearch);
-  const fieldChip = (c) => chip({ col: c.colId }, esc(c.label), q && !norm(c.label + ' ' + c.colId).includes(q) ? 'kb-hidden' : '',
-    `data-find="${esc(norm(c.label + ' ' + c.colId))}"`);
-  const shown = free.filter((c) => !q || norm(c.label + ' ' + c.colId).includes(q)).length;
-  return `<div class="kb-palette">
-    <div class="kb-pal-row">
-      <span class="kb-pal-label">Éléments :</span>
-      ${chip({ type: 'heading' }, 'Titre', 'kb-chip-el')}${chip({ type: 'section' }, 'Section', 'kb-chip-el')}${chip({ type: 'divider' }, 'Séparateur', 'kb-chip-el')}
-      <input type="search" class="fr-input fr-input--sm kb-pal-search" data-blk="search" value="${esc(palSearch)}" placeholder="Rechercher un champ…" aria-label="Rechercher un champ">
-    </div>
-    <div class="kb-pal-row">
-      <span class="kb-pal-label">Champs :</span>
-      <div class="kb-pal-fields">
-        ${free.map(fieldChip).join('')}
-        <span class="fr-hint-text kb-pal-none ${free.length && shown ? 'kb-hidden' : ''}">${free.length ? 'Aucun champ ne correspond.' : 'Tous les champs sont placés.'}</span>
-      </div>
-    </div>
-    <div class="kb-pal-hint">Glissez un élément dans la fenêtre, ou cliquez pour l’ajouter à la fin.</div></div>`;
-}
 /* recherche : sans accent ni casse */
 const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 let palSearch = '';
-function filterPalette() {
-  const q = norm(palSearch);
-  let n = 0;
-  document.querySelectorAll('.kb-pal-fields .kb-chip').forEach((c) => {
-    const ok = !q || c.dataset.find.includes(q);
-    c.classList.toggle('kb-hidden', !ok);
-    if (ok) n++;
-  });
-  const none = document.querySelector('.kb-pal-none');
-  if (none) none.classList.toggle('kb-hidden', n > 0 || !document.querySelector('.kb-pal-fields .kb-chip'));
+const popItem = (c, attrs, grip) => `<button type="button" class="kb-pop-item" ${attrs}>${grip ? '<span class="kb-pop-grip" aria-hidden="true">⠿</span>' : ''}<span>${esc(c.label)}</span><span class="kb-pop-type">${esc(typeLabel(c))}</span></button>`;
+/* liste de résultats sous le champ de recherche de la barre d'éléments (champs de la carte pas encore placés) */
+function palItems(q) {
+  const used = new Set(blocks().filter((b) => !b.type).map((b) => b.col)), nq = norm(q);
+  const free = meta.cols.filter((c) => c.colId !== cfg.titleCol && !used.has(c.colId));
+  const rows = free.filter((c) => !nq || norm(c.label + ' ' + c.colId).includes(nq));
+  if (!rows.length) return `<div class="kb-dd-none">${free.length ? 'Aucun champ ne correspond.' : 'Tous les champs sont placés.'}</div>`;
+  return rows.map((c) => popItem(c, `draggable="true" data-act="addBlk" data-spec="${esc(JSON.stringify({ col: c.colId }))}" title="Glisser dans la fenêtre ou cliquer pour ajouter à la fin"`, true)).join('');
+}
+/* champs de la table liée à ajouter au modèle d'un bloc « Table liée » */
+function lkAddItems(bi, q) {
+  const b = blocks()[bi]; if (!b || !b.lk) return '';
+  const used = new Set((b.fields || []).map((f) => f.col)), nq = norm(q);
+  const free = tableMeta(b.lk.table).cols.filter((c) => c.colId !== b.lk.refCol && c.colId !== b.lk.titleCol && !used.has(c.colId));
+  const rows = free.filter((c) => !nq || norm(c.label + ' ' + c.colId).includes(nq));
+  if (!rows.length) return `<div class="kb-dd-none">${free.length ? 'Aucun champ ne correspond.' : 'Tous les champs sont placés.'}</div>`;
+  return rows.map((c) => popItem(c, `data-act="tfAdd" data-i="${bi}" data-v="${esc(c.colId)}"`, false)).join('');
+}
+const closePops = () => document.querySelectorAll('.kb-pop.open').forEach((p) => p.classList.remove('open'));
+function openPop(pop, html) { if (!pop) return; closePops(); pop.innerHTML = html; pop.classList.add('open'); }
+function paletteHtml() {
+  const chip = (spec, label, cls) => `<button type="button" class="kb-chip ${cls || ''}" draggable="true" data-act="addBlk" data-spec="${esc(JSON.stringify(spec))}" title="Glisser dans la fenêtre ou cliquer pour ajouter à la fin">${label}</button>`;
+  return `<div class="kb-palette">
+    <span class="kb-pal-label">Ajouter :</span>
+    ${chip({ type: 'heading' }, 'Titre', 'kb-chip-el')}${chip({ type: 'section' }, 'Section', 'kb-chip-el')}${chip({ type: 'divider' }, 'Séparateur', 'kb-chip-el')}${reverseRefs.length ? chip({ type: 'linked' }, 'Table liée', 'kb-chip-el') : ''}
+    <div class="kb-pal-find"><input type="search" class="fr-input fr-input--sm kb-pal-search" data-blk="search" value="${esc(palSearch)}" placeholder="Rechercher un champ à ajouter…" autocomplete="off" aria-label="Rechercher un champ à ajouter"><div class="kb-pop" id="kbPalPop"></div></div></div>`;
 }
 
 /* --- fenêtre ------------------------------------------------------------ */
@@ -1105,10 +1314,18 @@ function renderModal() {
 function openModal(id) {
   if (!records.some((x) => x.id === id)) return;
   modalId = id; editLayout = false; pending = {}; editing = false; optIdx = null; palSearch = '';
-  collapsed.clear(); blocks().forEach((b, k) => { if (isSection(b) && b.fold && b.closed) collapsed.add(b.id || ('s' + k)); });   // sections repliées au départ
+  collapsed.clear(); blocks().forEach((b, k) => { if ((isSection(b) || isLkb(b)) && b.fold && b.closed) collapsed.add(b.id || ((isLkb(b) ? 'l' : 's') + k)); });   // sections repliées au départ
+  tfOpen = null;
   renderModal();
+  refreshLinkedOpen();
 }
-function closeModal() { $('#kbOverlay').classList.remove('open'); modalId = null; editLayout = false; pending = {}; editing = false; optIdx = null; mdrag = null; }
+/* relit les tables liées (données à jour à chaque ouverture) puis redessine, sauf si des saisies sont en cours */
+function refreshLinkedOpen() {
+  if (!blocks().some(isLkb)) return;
+  const id = modalId;
+  loadLinked().then(() => { if (modalId !== null && modalId === id && !Object.keys(pending).length) renderModal(); });
+}
+function closeModal() { $('#kbOverlay').classList.remove('open'); modalId = null; editLayout = false; pending = {}; editing = false; optIdx = null; tfOpen = null; mdrag = null; }
 const emptyish = (v) => v == null || v === '' || v === 0 || (Array.isArray(v) && !asList(v).length);
 function sameVal(c, a, b) {
   if (isListType(c) || c.base === 'Attachments') return JSON.stringify(asList(a)) === JSON.stringify(asList(b));
@@ -1118,11 +1335,41 @@ function sameVal(c, a, b) {
 }
 async function saveModal() {
   const r = records.find((x) => x.id === modalId); if (!r) return closeModal();
-  const fields = {};
-  Object.entries(pending).forEach(([k, nv]) => { const c = col(k); if (c && !c.readOnly && !sameVal(c, nv, r[k])) fields[k] = nv; });
+  const fields = {}, lkU = {};
+  Object.entries(pending).forEach(([k, nv]) => {
+    if (isLkKey(k)) {                                   // champ d'un enregistrement lié
+      const p = k.split('|'), c = tableMeta(p[1]).by[p[3]], row = Number(p[2]);
+      if (c && !c.readOnly && row && !sameVal(c, nv, lkVal(p[1], row, p[3]))) { const u = (lkU[p[1] + '|' + row] = lkU[p[1] + '|' + row] || { t: p[1], row, f: {} }); u.f[p[3]] = nv; }
+      return;
+    }
+    const c = col(k); if (c && !c.readOnly && !sameVal(c, nv, r[k])) fields[k] = nv;
+  });
   pending = {}; editing = false;
-  if (Object.keys(fields).length) { await saveFields(r.id, fields); toast('Carte enregistrée'); }
+  const lks = Object.values(lkU);
+  if (lks.length) await saveAtomic(r.id, fields, lks);
+  else if (Object.keys(fields).length) { await saveFields(r.id, fields); toast('Carte enregistrée'); }
   if (modalId !== null) renderModal();
+}
+/* carte + enregistrements liés : une seule opération Grist (tout est enregistré, ou rien) */
+async function saveAtomic(id, fields, lks) {
+  const r = records.find((x) => x.id === id), before = {};
+  if (r) { Object.keys(fields).forEach((k) => { before[k] = r[k]; }); Object.assign(r, fields); }
+  const undo = [];
+  lks.forEach(({ t, row, f }) => {
+    const d = linkData[t], i = linkIdx[t] && linkIdx[t].get(row);
+    if (d && i !== undefined) Object.entries(f).forEach(([c, v]) => { if (d[c]) { undo.push([d[c], i, d[c][i]]); d[c][i] = v; } });
+  });
+  renderBoard();
+  const actions = [];
+  if (Object.keys(fields).length) actions.push(['UpdateRecord', meta.tableId, id, fields]);
+  lks.forEach(({ t, row, f }) => actions.push(['UpdateRecord', t, row, f]));
+  try { await grist.docApi.applyUserActions(actions); toast('Carte enregistrée'); }
+  catch (e) {                                           // refus (droits d'accès…) : rien n'a été enregistré, on revient à l'état précédent
+    if (r) Object.assign(r, before);
+    undo.forEach(([arr, i, v]) => { arr[i] = v; });
+    renderBoard();
+    toast('Erreur d’enregistrement : ' + (e.message || e), true);
+  }
 }
 
 /* --- modifications de la mise en page --------------------------------- */
@@ -1130,11 +1377,21 @@ function enterLayout() {
   if (!isOwner) return;
   editLayout = true; optIdx = null; renderModal();
 }
-function saveLayout() { saveCfg(); renderModal(); }
+function saveLayout() {
+  saveCfg(); renderModal();
+  if (blocks().some((b) => isLkb(b) && b.lk && linkData[b.lk.table] === undefined)) loadLinked().then(() => { if (modalId !== null) renderModal(); });
+}
 function newBlock(spec) {
   if (spec.type === 'heading') return { type: 'heading', text: 'Nouveau titre' };
   if (spec.type === 'section') return { type: 'section', id: uid(), text: 'Nouvelle section' };
   if (spec.type === 'divider') return { type: 'divider' };
+  if (spec.type === 'linked') {
+    const rr = reverseRefs[0];
+    if (!rr) return { type: 'heading', text: 'Aucune table ne référence cette table' };
+    const lk = { table: rr.table, refCol: rr.col, titleCol: defaultTitleCol(rr.table, rr.col), sortCol: '' };
+    const f = tableMeta(rr.table).cols.find((c) => c.colId !== rr.col && c.colId !== lk.titleCol && !c.readOnly && (c.base === 'Choice' || c.base === 'ChoiceList'));
+    return { type: 'linked', id: uid(), text: 'Enregistrements liés', lk, fields: f ? [{ col: f.colId, w: defaultWidth(f) }] : [] };
+  }
   return { col: spec.col, w: defaultWidth(col(spec.col)) };
 }
 /* bloc (ou zone de dépôt) le plus proche du pointeur dans un conteneur, hors élément en cours de déplacement */
@@ -1190,7 +1447,11 @@ function validPos(pos) {
 function applyDrop(m) {
   const L = blocks();
   if (m.kind === 'new') L.splice(m.pos, 0, newBlock(m.spec));
-  else if (m.kind === 'block') {
+  else if (m.kind === 'tf') {                          // champ du modèle d'un bloc « Table liée »
+    const F = (L[m.bi] && L[m.bi].fields) || []; let to = m.pos; if (m.from < to) to--;
+    if (to === m.from) return;
+    const [it] = F.splice(m.from, 1); F.splice(to, 0, it); tfOpen = null;
+  } else if (m.kind === 'block') {
     let to = m.pos; if (m.from < to) to--;
     if (to === m.from) return;
     const [it] = L.splice(m.from, 1); L.splice(to, 0, it);
@@ -1263,7 +1524,7 @@ document.addEventListener('click', async (e) => {
     case 'closeSettings': $('#kbDrawer').classList.remove('open'); break;
     case 'close': closeModal(); break;
     case 'save': saveModal(); break;
-    case 'refresh': await loadMeta(); normRecords(); renderBoard(); renderDrawer(); toast('Structure rechargée'); break;
+    case 'refresh': await loadMeta(); await loadLinked(true); normRecords(); renderBoard(); renderDrawer(); toast('Structure rechargée'); break;
     case 'rm': cfg.cardFields.splice(i, 1); persist(); break;
     /* popup : mode mise en page */
     case 'editLayout': enterLayout(); break;
@@ -1285,8 +1546,14 @@ document.addEventListener('click', async (e) => {
     case 'blkOpt': optIdx = optIdx === i ? null : i; renderModal(); break;
     case 'setEmoji': { const b = blocks()[i]; if (b) { b.emoji = a.dataset.v; saveCfg(); renderModal(); } break; }
     case 'setTag': { const b = blocks()[i]; if (b) { b.tag = a.dataset.v; saveCfg(); renderModal(); } break; }
-    case 'blkRm': blocks().splice(i, 1); saveLayout(); break;
-    case 'addBlk': { let spec; try { spec = JSON.parse(a.dataset.spec); } catch (x) { break; } blocks().push(newBlock(spec)); saveLayout(); break; }
+    case 'blkRm': blocks().splice(i, 1); tfOpen = null; saveLayout(); break;
+    case 'addBlk': { let spec; try { spec = JSON.parse(a.dataset.spec); } catch (x) { break; } blocks().push(newBlock(spec)); palSearch = ''; saveLayout(); break; }
+    /* bloc « Table liée » : champs du modèle */
+    case 'tfAdd': { const b = blocks()[i], base = b && b.lk && tableMeta(b.lk.table).by[a.dataset.v]; if (base) { (b.fields = b.fields || []).push({ col: base.colId, w: defaultWidth(base) }); saveLayout(); } break; }
+    case 'tfRm': { const b = blocks()[i]; if (b && b.fields) { b.fields.splice(Number(a.dataset.fi), 1); tfOpen = null; saveLayout(); } break; }
+    case 'tfOpt': { const k = i + ':' + a.dataset.fi; tfOpen = tfOpen === k ? null : k; renderModal(); break; }
+    case 'tfEmoji': { const f = ((blocks()[i] || {}).fields || [])[Number(a.dataset.fi)]; if (f) { f.emoji = a.dataset.v; saveCfg(); renderModal(); } break; }
+    case 'tfTag': { const f = ((blocks()[i] || {}).fields || [])[Number(a.dataset.fi)]; if (f) { f.tag = a.dataset.v; saveCfg(); renderModal(); } break; }
   }
 });
 document.addEventListener('change', (e) => {
@@ -1307,7 +1574,7 @@ document.addEventListener('change', (e) => {
 const setPending = (colId, v) => { pending[colId] = v; };
 document.addEventListener('input', (e) => {
   const t = e.target, f = t.dataset && t.dataset.f; if (f === undefined) { if (t.dataset && t.dataset.refsearch !== undefined) {
-    const c = col(t.dataset.refsearch), b = blocks().find((x) => x.col === c.colId), list = t.parentElement.querySelector('.kb-dd-list');
+    const c = col(t.dataset.refsearch), b = blockForKey(c.colId), list = t.parentElement.querySelector('.kb-dd-list');
     if (list) list.innerHTML = refOptions(c, b, t.value);
   } return; }
   const k = t.dataset.kind;
@@ -1320,6 +1587,22 @@ document.addEventListener('input', (e) => {
 });
 document.addEventListener('change', (e) => {
   const t = e.target, d = t.dataset || {};
+  if (d.lk) {                                              // réglages d'un bloc « Table liée »
+    const b = blocks()[Number(d.i)]; if (!b || !b.lk) return;
+    if (d.lk === 'rel') {
+      const [tb, rc] = t.value.split('|');
+      if (tb !== b.lk.table || rc !== b.lk.refCol) { b.lk = { table: tb, refCol: rc, titleCol: defaultTitleCol(tb, rc), sortCol: '' }; b.fields = []; tfOpen = null; }
+    } else b.lk[d.lk] = t.value;
+    saveLayout(); return;
+  }
+  if (d.twsel !== undefined) { const [bi, fi] = d.twsel.split(':').map(Number), f = ((blocks()[bi] || {}).fields || [])[fi]; if (f) { f.w = t.value; saveLayout(); } return; }
+  if (d.topt) {                                            // option d'un champ du modèle
+    const f = ((blocks()[Number(d.bi)] || {}).fields || [])[Number(d.fi)]; if (!f) return;
+    const v = t.type === 'checkbox' ? t.checked : t.value.trim();
+    if (v === '' || v === false) delete f[d.topt]; else f[d.topt] = v;
+    saveCfg(); if (t.type === 'checkbox' || t.tagName === 'SELECT') renderModal();
+    return;
+  }
   if (d.opt) {                                            // option d'un champ (mode mise en page)
     const b = blocks()[Number(d.i)]; if (!b) return;
     const v = t.type === 'checkbox' ? t.checked : t.value.trim();
@@ -1345,13 +1628,19 @@ async function uploadFiles(colId, files) {
 document.addEventListener('mousedown', (e) => { if (e.target.closest && e.target.closest('.kb-ref .kb-dd-item')) e.preventDefault(); });   // garde le focus dans la recherche
 document.addEventListener('click', (e) => { if (!e.target.closest('.kb-dd')) document.querySelectorAll('.kb-dd.kb-open').forEach((n) => n.classList.remove('kb-open')); });
 $('#kbSearch').addEventListener('input', (e) => { search = e.target.value.trim().toLowerCase(); renderBoard(); });
-document.addEventListener('input', (e) => {             // recherche d'un champ dans la barre d'éléments (pas de nouveau rendu : on garde le focus)
-  if (e.target.dataset && e.target.dataset.blk === 'search') { palSearch = e.target.value; filterPalette(); }
-});
+/* recherche d'un champ : la liste de résultats s'affiche sous le champ (pas de nouveau rendu de la fenêtre : on garde le focus) */
+function showPop(t) {
+  if (t.dataset.blk === 'search') { palSearch = t.value; openPop(t.parentElement.querySelector('.kb-pop'), palItems(palSearch)); }
+  else if (t.dataset.lkadd !== undefined) openPop(t.parentElement.querySelector('.kb-pop'), lkAddItems(Number(t.dataset.lkadd), t.value));
+}
+document.addEventListener('input', (e) => { if (e.target.dataset && (e.target.dataset.blk === 'search' || e.target.dataset.lkadd !== undefined)) showPop(e.target); });
+document.addEventListener('focusin', (e) => { if (e.target.dataset && (e.target.dataset.blk === 'search' || e.target.dataset.lkadd !== undefined)) showPop(e.target); });
+document.addEventListener('click', (e) => { if (!e.target.closest('.kb-pal-find, .kb-lk-add')) closePops(); });
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   const t = e.target;
-  if (t && t.dataset && t.dataset.blk === 'search' && t.value) { t.value = ''; palSearch = ''; filterPalette(); return; }   // Échap efface d'abord la recherche
+  if (t && t.dataset && (t.dataset.blk === 'search' || t.dataset.lkadd !== undefined) && t.value) { t.value = ''; palSearch = ''; closePops(); return; }   // Échap efface d'abord la recherche
+  if (document.querySelector('.kb-pop.open')) { closePops(); return; }
   closeModal(); $('#kbDrawer').classList.remove('open');
 });
 
@@ -1359,20 +1648,25 @@ document.addEventListener('keydown', (e) => {
 let rdrag = null;   // { list: 'card' | 'modal', i, target?: { i, after } }
 const MARKS = ['row-dragging', 'drop-before', 'drop-after', 'drop-left', 'drop-right', 'drop-over'];
 const clearRowMarks = () => document.querySelectorAll(MARKS.map((m) => '.' + m).join(',')).forEach((n) => n.classList.remove(...MARKS));
-const resetGrips = () => document.querySelectorAll('.kb-row[draggable=true],.kb-blk[draggable=true]').forEach((n) => (n.draggable = false));
+const resetGrips = () => document.querySelectorAll('.kb-row[draggable=true],.kb-blk[draggable=true],.kb-tf[draggable=true]').forEach((n) => (n.draggable = false));
 document.addEventListener('mousedown', (e) => {
   const g = e.target.closest && e.target.closest('.kb-grip, .kb-blk-kind');     // poignée ou libellé de la barre
-  const host = g && g.closest('.kb-row, .kb-blk');
+  const host = g && g.closest('.kb-row, .kb-tf, .kb-blk');
   if (host) host.draggable = true;
 });
 document.addEventListener('mouseup', resetGrips);
 document.addEventListener('dragstart', (e) => {
   /* popup : élément de la palette ou bloc saisi par sa poignée */
-  const chip = e.target.closest && e.target.closest('.kb-chip');
-  const blk = !chip && e.target.closest && e.target.closest('.kb-blk');
-  if (chip || blk) {
-    if (chip) { try { mdrag = { kind: 'new', spec: JSON.parse(chip.dataset.spec) }; } catch (x) { return; } }
-    else {
+  const chip = e.target.closest && e.target.closest('.kb-chip, .kb-pop-item[data-spec]');
+  const tf = !chip && e.target.closest && e.target.closest('.kb-tf');
+  const blk = !chip && !tf && e.target.closest && e.target.closest('.kb-blk');
+  if (chip || tf || blk) {
+    if (chip) { try { mdrag = { kind: 'new', spec: JSON.parse(chip.dataset.spec) }; } catch (x) { return; } setTimeout(closePops, 0); }
+    else if (tf) {
+      const host = tf.closest('.kb-lkblk');
+      mdrag = { kind: 'tf', bi: Number(host.dataset.i), from: Number(tf.dataset.fi) };
+      tf.classList.add('row-dragging');
+    } else {
       const i = Number(blk.dataset.i), b = blocks()[i];
       mdrag = isSection(b) ? { kind: 'section', from: i, to: secEnd(i) } : { kind: 'block', from: i };
       blk.classList.add('row-dragging');
@@ -1396,10 +1690,29 @@ document.addEventListener('dragstart', (e) => {
   try { e.dataTransfer.setData('text/plain', String(drag.id)); } catch (x) {}
 });
 document.addEventListener('dragend', () => {
-  drag = null; rdrag = null; mdrag = null; clearRowMarks(); resetGrips();
+  drag = null; rdrag = null; mdrag = null; clearRowMarks(); resetGrips(); closePops();
   document.querySelectorAll('.dragging,.drag-over').forEach((n) => n.classList.remove('dragging', 'drag-over'));
 });
 document.addEventListener('dragover', (e) => {
+  if (mdrag && mdrag.kind === 'tf') {                  // réordonner les champs du modèle d'un bloc « Table liée »
+    const keep = document.querySelector('.kb-tf.row-dragging');
+    clearRowMarks(); if (keep) keep.classList.add('row-dragging');
+    mdrag.pos = undefined;
+    const host = e.target.closest && e.target.closest('.kb-lkblk');
+    if (!host || Number(host.dataset.i) !== mdrag.bi) return;
+    const el = nearestTarget(e, host, '.kb-tf, .kb-tf-end');
+    if (!el) return;
+    const fi = Number(el.dataset.fi), r = el.getBoundingClientRect();
+    let pos, side;
+    if (el.classList.contains('kb-tf-end')) { pos = fi; side = 'over'; }
+    else {
+      const f = blocks()[mdrag.bi].fields[fi], half = f.w !== 'full', after = half ? e.clientX > r.left + r.width / 2 : e.clientY > r.top + r.height / 2;
+      pos = fi + (after ? 1 : 0); side = half ? (after ? 'right' : 'left') : (after ? 'after' : 'before');
+    }
+    e.preventDefault(); mdrag.pos = pos;
+    el.classList.add(({ before: 'drop-before', after: 'drop-after', left: 'drop-left', right: 'drop-right', over: 'drop-over' })[side]);
+    return;
+  }
   if (mdrag) {
     const t = dropTarget(e);
     const keep = mdrag.kind === 'block' || mdrag.kind === 'section' ? document.querySelector('.kb-blk.row-dragging') : null;
@@ -1504,6 +1817,7 @@ async function loadRecords(rows) {
   normRecords();
   renderBoard();
   if (modalId !== null && !records.some((r) => r.id === modalId)) closeModal();
+  else if (modalId !== null) refreshLinkedOpen();
 }
 grist.onRecords((rows) => { loadRecords(rows); }, { includeColumns: 'shown', keepEncoded: true, expandRefs: false, format: 'rows' });
 renderBoard();
@@ -1515,6 +1829,7 @@ loadMeta().then(() => {
   if (!cfg.modalFields) cfg.modalFields = cfg.cardFields.map((f) => ({ col: f.col, w: defaultWidth(col(f.col)) }));
   normRecords();
   renderBoard(); renderDrawer();
+  loadLinked().then(() => { if (modalId !== null && !Object.keys(pending).length) renderModal(); });
 }).catch((e) => { $('#kbBoard').innerHTML = `<div class="kb-empty"><p>Impossible de lire la structure de la table.</p><p class="fr-hint-text">${esc(e.message || e)}<br>Vérifiez que le widget a l’accès « Accès complet au document ».</p></div>`; });
 </script>
 </body>
