@@ -177,7 +177,12 @@
 
   /* ---- calendrier / gantt ---- */
   .kb-bar { flex-wrap: wrap; row-gap: .5rem; }
-  .cv-tools { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+  .cv-tools { display: flex; align-items: center; gap: .375rem; flex-wrap: wrap; }
+  .kb-bar { column-gap: .5rem; }
+  .kb-bar .kb-title { flex: 0 1 auto; min-width: 0; max-width: 11rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kb-bar.no-title .kb-title { display: none; }
+  .kb-bar .kb-title { line-height: 1.5rem; }
+  .cv-actions { display: flex; align-items: center; gap: .375rem; margin-left: auto; flex: none; }
   .cv-period { font-size: 1rem; min-width: 8rem; text-align: center; color: var(--text-title-grey, #161616); }
   .cv-ic { min-width: 2rem; justify-content: center; font-size: 1.125rem; line-height: 1; }
   .cv-seg { display: inline-flex; border: 1px solid var(--border-default-grey, #ddd); border-radius: 4px; overflow: hidden; background: #fff; }
@@ -254,14 +259,32 @@
             background: var(--ev-bg, #ececfe); color: var(--ev-fg, #161616); cursor: pointer; box-shadow: 0 0 0 1px rgba(0,0,0,.08); overflow: hidden; }
   .gt-bar[data-drag] { cursor: grab; }
   .gt-bar:hover { box-shadow: 0 0 0 1px var(--text-action-high-blue-france, #000091), 0 2px 6px rgba(0,0,0,.12); }
-  .gt-bt { display: block; padding: 0 .5rem; line-height: 26px; font-size: .8125rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
+  .gt-bt { display: block; padding: 0 .5rem; line-height: calc(var(--bh, 28px) - 2px); font-size: var(--bf, .8125rem); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
   .gt-h { position: absolute; top: 0; bottom: 0; width: 8px; cursor: ew-resize; z-index: 2; }
   .gt-h.l { left: 0; } .gt-h.r { right: 0; }
   .gt-bar:hover .gt-h { background: rgba(0,0,0,.12); }
+  .cv-foot { flex: none; display: flex; justify-content: flex-end; padding: .125rem 1rem; border-top: 1px solid var(--border-default-grey, #ddd); background: #fff; font-size: .6875rem; line-height: 1.25rem; color: var(--text-mention-grey, #666); user-select: none; }
+  /* gantt par intervenant : une ligne par personne, études empilées, bande de charge */
+  .gt-person .gt-name { flex-direction: row; align-items: center; gap: .5rem; cursor: default; }
+  .gt-person .gt-name:hover { background: #fff; }
+  .gt-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; }
+  .gt-pn { min-width: 0; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .gt-pk { flex: none; min-width: 1.375rem; box-sizing: border-box; text-align: center; font-size: .75rem; font-weight: 700; line-height: 1.25rem; border-radius: 1rem; padding: 0 .375rem; color: #fff; }
+  .gt-pk.ok { background: #18753c; } .gt-pk.full { background: #b34000; } .gt-pk.over { background: #ce0500; }
+  .gt-load { position: absolute; left: 0; right: 0; bottom: 0; height: var(--sh, 6px); }
+  .gt-ld { position: absolute; bottom: 0; height: 100%; }
+  .gt-ld.ok { background: #18753c; opacity: .5; } .gt-ld.full { background: #b34000; opacity: .85; } .gt-ld.over { background: #ce0500; }
+  .gt-person.idle .gt-t { color: #666; font-weight: 400; }
+  .dens-compact .gt-t { font-size: .8125rem; } .dens-dense .gt-t { font-size: .75rem; line-height: 1rem; }
+  .dens-dense .gt-sub { display: none; }
+  .dens-dense .gt-bar { border-left-width: 3px; border-radius: 3px; }
   /* recherche : propositions */
   .cv-search { position: relative; }
-  .cv-search input { width: 260px; max-width: 100%; }
-  .sg-list { position: absolute; top: calc(100% + 4px); right: 0; width: 340px; max-width: 90vw; max-height: 60vh; overflow-y: auto; z-index: 48; background: #fff;
+  .cv-search .cv-si { display: none; width: 260px; max-width: 60vw; }
+  .cv-search.open .cv-si { display: block; animation: cv-grow .16s ease-out; }
+  .cv-search.open .cv-search-btn { display: none; }
+  @keyframes cv-grow { from { width: 2.5rem; } to { width: 260px; } }
+  .sg-list { position: absolute; top: calc(100% + 4px); left: 0; width: 340px; max-width: 90vw; max-height: 60vh; overflow-y: auto; z-index: 48; background: #fff;
              border: 1px solid var(--border-default-grey, #ddd); border-radius: 4px; box-shadow: 0 4px 16px rgba(0,0,0,.18); padding: 4px; }
   .sg-list[hidden] { display: none; }
   .sg-item { display: block; width: 100%; text-align: left; border: 0; background: none; cursor: pointer; padding: 6px 8px; border-radius: 2px; font: inherit; }
@@ -286,12 +309,14 @@
 <header class="kb-bar">
   <h1 class="kb-title" id="kbTitle">Calendrier / Gantt</h1>
   <div class="cv-tools" id="cvTools"></div>
-  <div class="kb-spacer"></div>
-  <div class="cv-search"><input class="fr-input fr-input--sm" type="search" id="kbSearch" placeholder="Rechercher une carte…" aria-label="Rechercher une carte" autocomplete="off"><div class="sg-list" id="kbSuggest" hidden></div></div>
+  <div class="cv-actions">
+  <div class="cv-search" id="cvSearch"><button type="button" class="fr-btn fr-btn--tertiary fr-btn--sm fr-icon-search-line cv-search-btn" data-act="searchOpen" title="Rechercher une carte" aria-label="Rechercher une carte">Rechercher</button><input class="fr-input fr-input--sm cv-si" type="search" id="kbSearch" placeholder="Rechercher une carte…" aria-label="Rechercher une carte" autocomplete="off"><div class="sg-list" id="kbSuggest" hidden></div></div>
   <button class="fr-btn fr-btn--tertiary fr-btn--sm fr-icon-refresh-line" data-act="refresh" title="Recharger la structure">Recharger</button>
-  <button class="fr-btn fr-btn--secondary fr-btn--sm fr-icon-settings-5-line fr-btn--icon-left kb-owner-only kb-hidden" data-act="settings">Configurer</button>
+  <button class="fr-btn fr-btn--tertiary fr-btn--sm fr-icon-settings-5-line kb-owner-only kb-hidden" data-act="settings" title="Configurer" aria-label="Configurer">Configurer</button>
+  </div>
 </header>
 <main class="kb-board" id="kbBoard"></main>
+<footer class="cv-foot" id="cvFoot"></footer>
 <div class="kb-overlay" id="kbOverlay"></div>
 <aside class="kb-drawer" id="kbDrawer" aria-label="Configuration"></aside>
 <div class="kb-toast" id="kbToast"></div>
@@ -300,6 +325,8 @@
 /* ------------------------------------------------------------------ *
  * Mode démo : si le widget est ouvert hors de Grist, on simule l'API
  * ------------------------------------------------------------------ */
+/* Version du widget : à augmenter à chaque modification (affichée en bas à droite) */
+const WIDGET_VERSION = '1.1.1';
 const IN_GRIST = typeof grist !== 'undefined' && window.parent !== window;
 /* En mode démo, ?role=owners|editors|viewers|error|probe-owner|probe-other simule la réponse de l'API Grist pour tester la détection du rôle */
 const DEMO_ROLE = !IN_GRIST ? new URLSearchParams(location.search).get('role') : null;
@@ -313,8 +340,18 @@ if (!IN_GRIST) {
     { id: 5, Titre: 'Atelier de restitution', Statut: 'À faire', Responsable: 2, Debut: T + 9 * D, Fin: T + 9 * D, Priorite: 'Moyenne', Tags: ['L', 'Discovery'], Description: '' },
     { id: 6, Titre: 'Recette utilisateurs', Statut: 'À faire', Responsable: 3, Debut: T + 20 * D, Fin: T + 27 * D, Priorite: 'Haute', Tags: ['L', 'UX'], Description: '' },
     { id: 7, Titre: 'Carte sans date', Statut: '', Responsable: 0, Debut: null, Fin: null, Priorite: '', Tags: ['L'], Description: '' },
+    { id: 8, Titre: 'Étude mobilité', Statut: 'En cours', Responsable: 1, Debut: T + 2 * D, Fin: T + 40 * D, Priorite: 'Moyenne', Tags: ['L', 'Discovery'], Description: '' },
+    { id: 9, Titre: 'Audit accessibilité', Statut: 'À faire', Responsable: 1, Debut: T + 45 * D, Fin: T + 90 * D, Priorite: 'Haute', Tags: ['L', 'UX'], Description: '' },
+    { id: 10, Titre: 'Enquête usagers', Statut: 'En cours', Responsable: 2, Debut: T + 12 * D, Fin: T + 60 * D, Priorite: 'Haute', Tags: ['L', 'UX'], Description: '' },
+    { id: 11, Titre: 'Benchmark outils', Statut: 'À faire', Responsable: 2, Debut: T + 20 * D, Fin: T + 35 * D, Priorite: 'Basse', Tags: ['L', 'Doc'], Description: '' },
+    { id: 12, Titre: 'Cartographie des flux', Statut: 'En cours', Responsable: 3, Debut: T + 30 * D, Fin: T + 110 * D, Priorite: 'Moyenne', Tags: ['L', 'Doc'], Description: '' },
+    { id: 13, Titre: 'Analyse des données', Statut: 'À faire', Responsable: 3, Debut: T + 50 * D, Fin: T + 75 * D, Priorite: 'Moyenne', Tags: ['L'], Description: '' },
+    { id: 14, Titre: 'Étude d’impact', Statut: 'Terminé', Responsable: 4, Debut: T - 20 * D, Fin: T + 10 * D, Priorite: 'Basse', Tags: ['L'], Description: '' },
+    { id: 15, Titre: 'Refonte du parcours', Statut: 'À faire', Responsable: 4, Debut: T + 70 * D, Fin: T + 130 * D, Priorite: 'Haute', Tags: ['L', 'UX'], Description: '' },
+    { id: 16, Titre: 'Cadrage budgétaire', Statut: 'En cours', Responsable: 1, Debut: T + 5 * D, Fin: T + 14 * D, Priorite: 'Moyenne', Tags: ['L'], Description: '' },
+    { id: 17, Titre: 'Étude sans pilote', Statut: 'À faire', Responsable: 0, Debut: T + 25 * D, Fin: T + 38 * D, Priorite: 'Basse', Tags: ['L'], Description: '' },
   ];
-  const people = { id: [1, 2, 3], Nom: ['Camille Durand', 'Sami Benali', 'Inès Martin'], Service: [1, 2, 1] };
+  const people = { id: [1, 2, 3, 4, 5], Nom: ['Camille Durand', 'Sami Benali', 'Inès Martin', 'Léa Moreau', 'Hugo Petit'], Service: [1, 2, 1, 2, 1] };
   const services = { id: [1, 2], Nom: ['Produit', 'Données'] };
   const tcols = [
     ['Titre', 'Text'], ['Statut', 'Choice'], ['Responsable', 'Ref:Personnes'], ['Debut', 'Date'], ['Fin', 'Date'],
@@ -373,7 +410,7 @@ if (!IN_GRIST) {
         const ids = [], out = { id: [], parentId: [], parentPos: [], colId: [], label: [], type: [], widgetOptions: [], visibleCol: [], isFormula: [], description: [] };
         tcols.forEach(([c, t], i) => {
           out.id.push(10 + i); out.parentId.push(1); out.parentPos.push(i); out.colId.push(c); out.label.push(c === 'Priorite' ? 'Priorité' : c === 'Debut' ? 'Début' : c);
-          out.description.push(c === 'Budget' ? 'Budget prévisionnel en euros, hors taxes.' : ''); out.type.push(t); out.widgetOptions.push(JSON.stringify(wopts[c] || {})); out.visibleCol.push(c === 'Responsable' || c === 'Equipe' ? 51 : 0); out.isFormula.push(false);
+          out.description.push(c === 'Budget' ? 'Budget prévisionnel en euros, hors taxes.' : ''); out.type.push(t); out.widgetOptions.push(JSON.stringify(wopts[c] || {})); out.visibleCol.push(c === 'Responsable' ? 50 : c === 'Equipe' ? 51 : 0); out.isFormula.push(false);
         });
         out.id.push(50); out.parentId.push(2); out.parentPos.push(0); out.colId.push('Nom'); out.label.push('Nom'); out.type.push('Text');
         out.widgetOptions.push(''); out.visibleCol.push(0); out.isFormula.push(false); out.description.push('');
@@ -410,11 +447,13 @@ const PALETTE = [
   { n: 'Gris',              bar: '#666666', bg: '#eeeeee' },
   { n: 'Gris clair',        bar: '#929292', bg: '#f6f6f6' },
 ];
+{ const f = document.getElementById('cvFoot'); if (f) { f.textContent = 'Calendrier / Gantt · v' + WIDGET_VERSION; f.title = 'Version du widget : ' + WIDGET_VERSION; } }
 const HIDE = /^(gristHelper_|manualSort)/;
 const GROUP_TYPES = ['Choice', 'ChoiceList', 'Ref', 'RefList'];
 
 let cfg = { mode: 'calendar', startCol: null, endCol: undefined, colorCol: undefined, groupCol: null, titleCol: null, cardFields: [], modalFields: null, editMethod: 'button',
-            calView: 'month', monthCards: false, ganttView: 'scroll', ganttZoom: 'day' };
+            calView: 'month', monthCards: false, ganttView: 'scroll', ganttZoom: 'day',
+            ganttRows: 'items', personCol: undefined, ganttDensity: 'comfortable', loadMax: 2, peopleHideIdle: false };
 let meta = { loaded: false, tableId: '', cols: [], by: {} };
 let refs = {};            // colId -> { rows:[{id,label}], map:{id:label} }
 let records = [];
@@ -574,6 +613,8 @@ async function loadMeta() {
   if (cfg.colorCol === undefined) { const k = cols.find((c) => c.base === 'Choice'); cfg.colorCol = k ? k.colId : null; }
   else if (cfg.colorCol && !col(cfg.colorCol)) cfg.colorCol = null;
   if (cfg.groupCol && !col(cfg.groupCol)) cfg.groupCol = null;
+  if (cfg.personCol && !col(cfg.personCol)) cfg.personCol = null;
+  if (cfg.ganttRows === 'people' && !cfg.personCol) cfg.personCol = autoPersonCol();
   if (!cfg.titleCol || !col(cfg.titleCol)) {
     const t = cols.find((c) => c.base === 'Text') || cols[0];
     if (t) cfg.titleCol = t.colId;
@@ -858,12 +899,13 @@ function fieldHtml(f, r) {
  * Les choix « Mois / Semaine », « Calendrier / Défilement » et l'échelle de la barre d'outils valent pour la session :
  * leur valeur de départ est celle de la configuration.
  * ------------------------------------------------------------------ */
-let ui = { calView: 'month', ganttView: 'scroll', zoom: 'day', anchor: null, rs: null, re: null, gInit: false, keepL: null, sL: 0, sT: 0, collapsed: new Set(), undated: false, flash: null };
+let ui = { calView: 'month', ganttView: 'scroll', zoom: 'day', anchor: null, rs: null, re: null, gInit: false, keepL: null, sL: 0, sT: 0, collapsed: new Set(), undated: false, flash: null, density: 'comfortable' };
 let lastRender = 0;
 function syncUi() {
   ui.calView = cfg.calView === 'week' ? 'week' : 'month';
   ui.ganttView = cfg.ganttView === 'calendar' ? 'calendar' : 'scroll';
-  ui.zoom = ['day', 'week', 'month'].includes(cfg.ganttZoom) ? cfg.ganttZoom : 'day';
+  ui.zoom = ['day', 'week', 'month', 'year'].includes(cfg.ganttZoom) ? cfg.ganttZoom : 'day';
+  ui.density = ['compact', 'dense'].includes(cfg.ganttDensity) ? cfg.ganttDensity : 'comfortable';
   ui.gInit = false;
 }
 const segHtml = (k, cur, opts) => `<div class="cv-seg" role="group">${opts.map(([v, l]) => `<button type="button" data-act="cvSet" data-k="${k}" data-v="${v}" aria-pressed="${cur === v}">${l}</button>`).join('')}</div>`;
@@ -881,8 +923,9 @@ function toolsHtml(title, undated) {
     <button type="button" class="fr-btn fr-btn--tertiary-no-outline fr-btn--sm cv-ic" data-act="cvNext" aria-label="Suivant" title="Suivant">›</button>`;
   if (title) h += `<strong class="cv-period">${esc(title)}</strong>`;
   if (gantt) h += segHtml('ganttView', ui.ganttView, [['calendar', 'Calendrier'], ['scroll', 'Défilement']]);
-  h += scroll ? segHtml('zoom', ui.zoom, [['day', 'Jours'], ['week', 'Semaines'], ['month', 'Mois']])
+  h += scroll ? segHtml('zoom', ui.zoom, [['day', 'Jours'], ['week', 'Semaines'], ['month', 'Mois'], ['year', 'Année']])
               : segHtml('calView', ui.calView, [['month', 'Mois'], ['week', 'Semaine']]);
+  if (peopleMode()) h += segHtml('density', ui.density, [['comfortable', 'Aéré'], ['compact', 'Compact'], ['dense', 'Dense']]);
   if (undated.length) {
     h += `<span class="cv-undated-wrap"><button type="button" class="fr-btn fr-btn--tertiary fr-btn--sm" data-act="cvUndated" aria-expanded="${ui.undated}">${undated.length} sans date</button>`;
     if (ui.undated) h += `<div class="cv-undated">${undated.map((r) => `<button type="button" class="cv-un-item" data-open="1" data-id="${r.id}">${esc(displayText(cfg.titleCol, r) || 'Sans titre')}</button>`).join('')}</div>`;
@@ -940,7 +983,7 @@ function calendarHtml(items) {
 }
 
 /* --- gantt ------------------------------------------------------------- */
-function ganttHead(rs, re, dayW, showDays) {
+function ganttHead(rs, re, dayW, showDays, showWeeks) {
   const today = todayDay();
   const cell = (cls, d0, d1, inner, extra) => `<div class="gt-hc ${cls}${extra || ''}" style="left:${(d0 - rs) * dayW}px;width:${(d1 - d0 + 1) * dayW}px">${inner}</div>`;
   let h = '';
@@ -949,7 +992,7 @@ function ganttHead(rs, re, dayW, showDays) {
     h += cell('gt-mc', d, end, `<span>${esc(cap(fmtDay(d, w > 130 ? { month: 'long', year: 'numeric' } : { month: 'short', year: '2-digit' })))}</span>`);
     d = end + 1;
   }
-  for (let d = rs; d <= re;) {                                                  // semaines, alignées sur la même grille de jours
+  for (let d = rs; showWeeks && d <= re;) {                                     // semaines, alignées sur la même grille de jours
     const end = Math.min(re, weekStart(d) + 6), w = (end - d + 1) * dayW;
     const lab = w >= 90 ? `S${isoWeek(d)} · ${fmtDay(d, { day: 'numeric', month: 'short' })}` : w >= 26 ? `S${isoWeek(d)}` : '';
     h += cell('gt-wc', d, end, `<span>${esc(lab)}</span>`);
@@ -962,6 +1005,64 @@ function ganttHead(rs, re, dayW, showDays) {
   }
   return h;
 }
+/* --- gantt par intervenant : une ligne par personne, charge = nombre d'études en parallèle --------- */
+const PERSON_PAL = [0, 2, 5, 8, 1, 4, 3, 9, 7];                                 // indices de PALETTE (sans le rouge, réservé à la surcharge)
+const DENS = {
+  comfortable: { lane: 32, bar: 26, pad: 4, strip: 8, font: '.8125rem' },
+  compact:     { lane: 24, bar: 20, pad: 3, strip: 6, font: '.75rem' },
+  dense:       { lane: 17, bar: 14, pad: 2, strip: 5, font: '.6875rem' },
+};
+const loadMax = () => Math.max(1, Math.round(Number(cfg.loadMax)) || 2);
+const loadLvl = (c) => (c > loadMax() ? 'over' : c === loadMax() ? 'full' : 'ok');
+const peopleMode = () => cfg.mode === 'gantt' && cfg.ganttRows === 'people' && !!col(cfg.personCol);
+function autoPersonCol() {
+  const c = meta.cols.filter((x) => x.base === 'Ref' || x.base === 'RefList');
+  const hit = c.find((x) => /interv|respons|pilote|charg|assign|personne|agent|analyste|etude|étude/i.test(x.label + ' ' + x.colId)) || c[0];
+  return hit ? hit.colId : null;
+}
+/* personnes : toutes celles de la table liée (même sans étude : on voit qui est libre), triées par nom ; la couleur suit l'ordre des identifiants */
+function personDefs(extra) {
+  const pc = col(cfg.personCol), isRef = pc.base === 'Ref' || pc.base === 'RefList';
+  let defs = isRef ? (refs[pc.colId]?.rows || []).map((r) => ({ key: r.id, label: String(r.label ?? r.id) }))
+                   : ((pc.opts && pc.opts.choices) || []).map((v) => ({ key: v, label: String(v) }));
+  extra.forEach((k) => { if (!defs.some((d) => d.key === k)) defs.push({ key: k, label: String(isRef ? (refs[pc.colId]?.map?.[k] ?? k) : k) }); });
+  const order = isRef ? [...defs].sort((a, b) => a.key - b.key) : defs;
+  order.forEach((d, i) => { const p = PALETTE[PERSON_PAL[i % PERSON_PAL.length]]; d.color = { bg: p.bg, fg: '#161616', bar: p.bar }; });
+  return isRef ? defs.sort((a, b) => a.label.localeCompare(b.label, docSettings.locale)) : defs;
+}
+function peopleLayout(items) {
+  const pc = col(cfg.personCol), keysOf = (x) => asList(x.r[pc.colId]);
+  const seen = new Set(); items.forEach((x) => keysOf(x).forEach((k) => seen.add(k)));
+  const list = personDefs([...seen]).map((d) => ({ ...d, items: [] }));
+  const by = new Map(list.map((p) => [p.key, p]));
+  const none = { key: '__none', label: 'Sans intervenant', color: { bg: '#eeeeee', fg: '#3a3a3a', bar: '#929292' }, items: [] };
+  items.forEach((x) => { const ks = keysOf(x); if (!ks.length) none.items.push(x); else ks.forEach((k) => by.get(k).items.push(x)); });
+  if (none.items.length) list.push(none);
+  list.forEach((p) => {
+    const lanes = []; p.lane = new Map();
+    p.items.forEach((x) => { let l = lanes.findIndex((end) => end < x.s); if (l < 0) { l = lanes.length; lanes.push(x.e); } else lanes[l] = x.e; p.lane.set(x.r.id, l); });
+    p.nLanes = Math.max(1, lanes.length);
+    const ev = []; p.items.forEach((x) => { ev.push([x.s, 1], [x.e + 1, -1]); });
+    ev.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    let c = 0; p.peak = 0; ev.forEach(([, v]) => { c += v; if (c > p.peak) p.peak = c; });
+  });
+  return cfg.peopleHideIdle ? list.filter((p) => p.items.length) : list;
+}
+/* périodes d'occupation sur [rs, re] : suites de jours ayant le même nombre d'études en parallèle */
+function loadRuns(p, rs, re) {
+  const n = re - rs + 1, diff = new Int32Array(n + 1);
+  p.items.forEach((x) => { if (x.e < rs || x.s > re) return; diff[Math.max(x.s, rs) - rs]++; diff[Math.min(x.e, re) - rs + 1]--; });
+  const runs = []; let c = 0, a = 0, cv = 0;
+  for (let i = 0; i < n; i++) {
+    c += diff[i];
+    if (c !== cv) { if (cv > 0) runs.push({ a: a + rs, b: i - 1 + rs, c: cv }); a = i; cv = c; }
+  }
+  if (cv > 0) runs.push({ a: a + rs, b: n - 1 + rs, c: cv });
+  return runs;
+}
+const rangeLabel = (a, b) => (a === b ? fmtDay(a, { day: 'numeric', month: 'short', year: 'numeric' })
+  : `${fmtDay(a, { day: 'numeric', month: 'short' })} – ${fmtDay(b, { day: 'numeric', month: 'short', year: 'numeric' })}`);
+
 /* lignes du gantt, éventuellement regroupées (premier choix / première référence de la colonne de regroupement) */
 function ganttRows(items, undated) {
   const all = [...items.map((x) => ({ r: x.r, s: x.s, e: x.e })), ...undated.map((r) => ({ r }))];
@@ -988,10 +1089,10 @@ function ganttRows(items, undated) {
 }
 function ganttHtml(items, undated) {
   const scroll = ui.ganttView === 'scroll', boardW = Math.max(320, $('#kbBoard').clientWidth || 800);
-  const LEFT = boardW < 640 ? 150 : 240;
+  const pm = peopleMode(), LEFT = pm ? (boardW < 640 ? 140 : 210) : (boardW < 640 ? 150 : 240);
   let dayW, rs, re;
   if (scroll) {
-    dayW = { day: 34, week: 14, month: 4.5 }[ui.zoom] || 34;
+    dayW = { day: 34, week: 14, month: 4.5, year: 2.6 }[ui.zoom] || 34;
     if (!ui.gInit || ui.rs === null) { const buf = Math.ceil((boardW - LEFT) * 1.5 / dayW) + 30; ui.rs = ui.anchor - buf; ui.re = ui.anchor + buf; }
     rs = ui.rs; re = ui.re;
   } else {
@@ -999,7 +1100,7 @@ function ganttHtml(items, undated) {
     else { const p = ymd(ui.anchor); rs = dayFrom(p.y, p.m, 1); re = dayFrom(p.y, p.m + 1, 0); }
     dayW = Math.max(ui.calView === 'week' ? 90 : 28, Math.floor((boardW - LEFT - 2) / (re - rs + 1)));
   }
-  const n = re - rs + 1, total = n * dayW, showDays = dayW >= 22, HEAD = 48 + (showDays ? 34 : 0), today = todayDay();
+  const n = re - rs + 1, total = n * dayW, showDays = dayW >= 22, showWeeks = !pm || dayW >= 8, HEAD = showWeeks ? 48 + (showDays ? 34 : 0) : 26, today = todayDay();
   const can = canMove(), hasEnd = !!col(cfg.endCol);
 
   let bg = '';
@@ -1007,15 +1108,29 @@ function ganttHtml(items, undated) {
   if (today >= rs && today <= re) bg += `<div class="gt-today" style="left:${(today - rs) * dayW + dayW / 2 - 1}px"></div>`;
   const grid = dayW >= 14 ? `background:linear-gradient(to right,#ececec 1px,transparent 1px) 0 0/${dayW}px 100%;` : '';
 
-  const bar = (x) => {
+  const bar = (x, color, geo) => {
     if (x.s === undefined) return '<span class="gt-nodate">Sans date</span>';
     if (x.e < rs || x.s > re) return '';
-    const cs = Math.max(x.s, rs), ce = Math.min(x.e, re), k = evColor(x.r), title = displayText(cfg.titleCol, x.r) || 'Sans titre';
+    const cs = Math.max(x.s, rs), ce = Math.min(x.e, re), k = color || evColor(x.r), title = displayText(cfg.titleCol, x.r) || 'Sans titre';
     const l = (cs - rs) * dayW + 2, w = Math.max(6, (ce - cs + 1) * dayW - 4);
     const hs = can && hasEnd ? `${x.s >= rs ? '<i class="gt-h l"></i>' : ''}${x.e <= re ? '<i class="gt-h r"></i>' : ''}` : '';
-    return `<div class="gt-bar${x.s < rs ? ' cl' : ''}${x.e > re ? ' cr' : ''}" data-open="1" data-id="${x.r.id}" ${can ? `data-drag="1" data-s="${x.s}" data-e="${x.e}"` : ''} style="left:${l}px;width:${w}px;--ev-bg:${esc(k.bg)};--ev-fg:${esc(k.fg)};--ev-bar:${esc(k.bar)}" title="${esc(title)}">${hs}<span class="gt-bt">${esc(title)}</span></div>`;
+    return `<div class="gt-bar${x.s < rs ? ' cl' : ''}${x.e > re ? ' cr' : ''}" data-open="1" data-id="${x.r.id}" ${can ? `data-drag="1" data-s="${x.s}" data-e="${x.e}"` : ''} style="left:${l}px;width:${w}px;${geo ? `top:${geo.top}px;height:${geo.h}px;--bh:${geo.h}px;--bf:${geo.f};` : ''}--ev-bg:${esc(k.bg)};--ev-fg:${esc(k.fg)};--ev-bar:${esc(k.bar)}" title="${esc(title)}">${hs}<span class="gt-bt">${esc(title)}</span></div>`;
   };
-  const rows = ganttRows(items, undated).map((row) => {
+  const peopleRows = () => {
+    const D = DENS[ui.density] || DENS.comfortable;
+    return peopleLayout(items).map((p) => {
+      const H = D.pad * 2 + p.nLanes * D.lane + D.strip, n = p.items.length;
+      const bars = p.items.map((x) => bar(x, p.color, { top: D.pad + p.lane.get(x.r.id) * D.lane + (D.lane - D.bar) / 2, h: D.bar, f: D.font })).join('');
+      const strip = loadRuns(p, rs, re).map((u) => {
+        const names = p.items.filter((x) => x.s <= u.b && x.e >= u.a).map((x) => '• ' + (displayText(cfg.titleCol, x.r) || 'Sans titre')).join('\n');
+        return `<i class="gt-ld ${loadLvl(u.c)}" style="left:${(u.a - rs) * dayW}px;width:${(u.b - u.a + 1) * dayW}px" title="${esc(`${u.c} étude${u.c > 1 ? 's' : ''} en parallèle · ${rangeLabel(u.a, u.b)}\n${names}`)}"></i>`;
+      }).join('');
+      const pk = n ? `<span class="gt-pk ${loadLvl(p.peak)}" title="Pic : ${p.peak} étude${p.peak > 1 ? 's' : ''} en parallèle (maximum conseillé : ${loadMax()})">${p.peak}</span>` : '';
+      return `<div class="gt-row gt-person${n ? '' : ' idle'}" style="height:${H}px"><div class="gt-name" title="${esc(p.label)}"><span class="gt-dot" style="background:${esc(p.color.bar)}"></span><span class="gt-pn"><span class="gt-t">${esc(p.label)}</span><span class="gt-sub">${n ? `${n} étude${n > 1 ? 's' : ''}` : 'Aucune étude'}</span></span>${pk}</div>
+        <div class="gt-track" style="width:${total}px">${bars}<div class="gt-load" style="--sh:${D.strip}px">${strip}</div></div></div>`;
+    }).join('');
+  };
+  const rows = pm ? peopleRows() : ganttRows(items, undated).map((row) => {
     if (row.kind === 'group') {
       const shut = ui.collapsed.has(row.key);
       return `<div class="gt-row gt-grp"><div class="gt-name" data-act="gtGroup" data-key="${esc(row.key)}" role="button" aria-expanded="${!shut}"><span class="gt-chev">${shut ? '▸' : '▾'}</span><span class="gt-t">${esc(row.label)}</span><span class="kb-count">${row.n}</span></div><div class="gt-track" style="width:${total}px"></div></div>`;
@@ -1024,15 +1139,17 @@ function ganttHtml(items, undated) {
     return `<div class="gt-row"><div class="gt-name" data-open="1" data-id="${r.id}"><div class="gt-t">${esc(displayText(cfg.titleCol, r) || 'Sans titre')}</div>${sub ? `<div class="gt-sub">${esc(sub)}</div>` : ''}</div><div class="gt-track" style="width:${total}px">${bar(row.x)}</div></div>`;
   }).join('');
 
-  return `<div class="gt-scroll" data-dayw="${dayW}" data-left="${LEFT}" style="--left:${LEFT}px"><div class="gt-inner" style="width:${LEFT + total}px">
-    <div class="gt-headrow" style="height:${HEAD}px"><div class="gt-corner">${items.length + undated.length} élément${items.length + undated.length > 1 ? 's' : ''}</div><div class="gt-timehead" style="width:${total}px;height:${HEAD}px">${ganttHead(rs, re, dayW, showDays)}</div></div>
+  const nEl = items.length + (pm ? 0 : undated.length), corner = pm ? `${items.length} étude${items.length > 1 ? 's' : ''}` : `${nEl} élément${nEl > 1 ? 's' : ''}`;
+  return `<div class="gt-scroll${pm ? ' dens-' + ui.density : ''}" data-dayw="${dayW}" data-left="${LEFT}" style="--left:${LEFT}px"><div class="gt-inner" style="width:${LEFT + total}px">
+    <div class="gt-headrow" style="height:${HEAD}px"><div class="gt-corner">${corner}</div><div class="gt-timehead" style="width:${total}px;height:${HEAD}px">${ganttHead(rs, re, dayW, showDays, showWeeks)}</div></div>
     <div class="gt-bg" style="left:${LEFT}px;top:${HEAD}px;width:${total}px;${grid}">${bg}</div>${rows}</div></div>`;
 }
 
 /* --- rendu ------------------------------------------------------------- */
 function renderBoard() {
   const board = $('#kbBoard'), tools = $('#cvTools');
-  $('#kbTitle').textContent = meta.tableId ? `${cfg.mode === 'gantt' ? 'Gantt' : 'Calendrier'} · ${meta.tableId}` : 'Calendrier / Gantt';
+  const ttl = meta.tableId ? `${cfg.mode === 'gantt' ? 'Gantt' : 'Calendrier'} · ${meta.tableId}` : 'Calendrier / Gantt';
+  $('#kbTitle').textContent = ttl; $('#kbTitle').title = ttl;
   if (ui.anchor === null) ui.anchor = todayDay();
   if (!meta.loaded) { board.className = 'kb-board'; board.innerHTML = '<div class="kb-empty">Chargement…</div>'; tools.innerHTML = ''; return; }
   if (!col(cfg.startCol)) {
@@ -1053,6 +1170,7 @@ function renderBoard() {
   board.className = 'kb-board cv';
   board.innerHTML = gantt ? ganttHtml(items, undated) : calendarHtml(items);
   lastRender = performance.now();
+  fitBar();
   if (gantt) {
     const sc = board.querySelector('.gt-scroll');
     if (sc) {
@@ -1588,9 +1706,21 @@ function renderDrawer() {
       ${lab('Période (mode calendrier)')}
       ${fixed('calView', cfg.calView === 'week' ? 'week' : 'month', [['month', 'Mois'], ['week', 'Semaine']])}
       ${lab('Échelle (défilement continu)')}
-      ${fixed('ganttZoom', ['day', 'week', 'month'].includes(cfg.ganttZoom) ? cfg.ganttZoom : 'day', [['day', 'Jours'], ['week', 'Semaines'], ['month', 'Mois']])}
-      ${lab('Regrouper les lignes par (facultatif)')}
-      <select class="fr-select" data-cfg="groupCol"><option value="">— Pas de regroupement —</option>${opt(groupable, cfg.groupCol)}</select></section>`
+      ${fixed('ganttZoom', ['day', 'week', 'month', 'year'].includes(cfg.ganttZoom) ? cfg.ganttZoom : 'day', [['day', 'Jours'], ['week', 'Semaines'], ['month', 'Mois'], ['year', 'Année (12 mois)']])}
+      ${lab('Lignes du Gantt')}
+      ${fixed('ganttRows', cfg.ganttRows === 'people' ? 'people' : 'items', [['items', 'Une ligne par élément'], ['people', 'Une ligne par intervenant (charge)']])}
+      ${cfg.ganttRows === 'people' ? `
+      ${lab('Intervenant (une ligne par personne)')}
+      <select class="fr-select" data-cfg="personCol"><option value="">— Choisir —</option>${opt(groupable, cfg.personCol)}</select>
+      ${lab('Études en parallèle : maximum conseillé')}
+      <input class="fr-input" type="number" min="1" step="1" data-cfg="loadMax" value="${loadMax()}">
+      <p class="fr-hint-text" style="margin-top:.5rem">La bande sous chaque personne indique le nombre d’études en parallèle : verte sous ce maximum, orange à ce maximum, rouge au-dessus.</p>
+      ${lab('Densité')}
+      ${fixed('ganttDensity', ['compact', 'dense'].includes(cfg.ganttDensity) ? cfg.ganttDensity : 'comfortable', [['comfortable', 'Aérée'], ['compact', 'Compacte'], ['dense', 'Très compacte']])}
+      <label style="display:flex;gap:.5rem;align-items:center;margin-top:.75rem;font-size:.875rem"><input type="checkbox" data-cfg="peopleHideIdle" ${cfg.peopleHideIdle ? 'checked' : ''}> Masquer les personnes sans étude</label>
+      <p class="fr-hint-text" style="margin-top:.5rem">Les couleurs sont attribuées par intervenant : le réglage « Couleur selon » ne s’applique pas à cette vue.</p>`
+      : `${lab('Regrouper les lignes par (facultatif)')}
+      <select class="fr-select" data-cfg="groupCol"><option value="">— Pas de regroupement —</option>${opt(groupable, cfg.groupCol)}</select>`}</section>`
     : `<section><h3>Calendrier</h3>
       ${lab('Format par défaut')}
       ${fixed('calView', cfg.calView === 'week' ? 'week' : 'month', [['month', 'Mois'], ['week', 'Semaine']])}
@@ -1622,6 +1752,7 @@ document.addEventListener('click', async (e) => {
     case 'closeSettings': $('#kbDrawer').classList.remove('open'); break;
     case 'close': closeModal(); break;
     /* calendrier / gantt */
+    case 'searchOpen': openSearch(); break;
     case 'cvToday': ui.anchor = todayDay(); ui.gInit = false; renderBoard(); break;
     case 'cvPrev': navigate(-1); break;
     case 'cvNext': navigate(1); break;
@@ -1668,6 +1799,14 @@ document.addEventListener('change', (e) => {
   else if (k === 'startCol' || k === 'endCol' || k === 'colorCol') cfg[k] = t.value || null;
   else if (k === 'mode' || k === 'calView' || k === 'ganttView' || k === 'ganttZoom') cfg[k] = t.value;
   else if (k === 'monthCards') cfg.monthCards = t.checked;
+  else if (k === 'ganttRows') {
+    cfg.ganttRows = t.value === 'people' ? 'people' : 'items';
+    if (cfg.ganttRows === 'people') { if (!cfg.personCol || !col(cfg.personCol)) cfg.personCol = autoPersonCol(); if (!cfg.ganttZoom || cfg.ganttZoom === 'day') cfg.ganttZoom = 'month'; }
+  }
+  else if (k === 'personCol') cfg.personCol = t.value || null;
+  else if (k === 'ganttDensity') cfg.ganttDensity = ['compact', 'dense'].includes(t.value) ? t.value : 'comfortable';
+  else if (k === 'loadMax') cfg.loadMax = Math.max(1, Math.round(Number(t.value)) || 2);
+  else if (k === 'peopleHideIdle') cfg.peopleHideIdle = t.checked;
   else if (k === 'titleCol') cfg.titleCol = t.value;
   else if (k === 'editMethod') { cfg.editMethod = t.value === 'direct' ? 'direct' : 'button'; if (modalId !== null) renderModal(); }
   else if (k === 'addCard') { if (t.value) cfg.cardFields.push({ col: t.value }); }
@@ -1715,11 +1854,18 @@ async function uploadFiles(colId, files) {
 }
 document.addEventListener('mousedown', (e) => { if (e.target.closest && e.target.closest('.kb-ref .kb-dd-item')) e.preventDefault(); });   // garde le focus dans la recherche
 document.addEventListener('click', (e) => { if (!e.target.closest('.kb-dd')) document.querySelectorAll('.kb-dd.kb-open').forEach((n) => n.classList.remove('kb-open')); });
+/* la recherche est une loupe : elle s'ouvre au clic et se referme quand on la quitte sans rien avoir tapé */
+function openSearch() { $('#cvSearch').classList.add('open'); const i = $('#kbSearch'); i.focus(); if (i.value.trim()) showSuggest(); }
+function closeSearch(force) {
+  const i = $('#kbSearch'); if (!force && i.value.trim()) return;
+  i.value = ''; search = ''; hideSuggest(); $('#cvSearch').classList.remove('open');
+}
+$('#kbSearch').addEventListener('blur', () => setTimeout(() => { const a = document.activeElement; if (!a || !a.closest || !a.closest('.cv-search')) closeSearch(false); }, 150));
 $('#kbSearch').addEventListener('input', (e) => { search = e.target.value; showSuggest(); });
 $('#kbSearch').addEventListener('focus', () => { if (search.trim()) showSuggest(); });
 $('#kbSearch').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { const b = document.querySelector('#kbSuggest .sg-item'); if (b) { e.preventDefault(); b.click(); } }
-  else if (e.key === 'Escape') { hideSuggest(); e.stopPropagation(); }
+  else if (e.key === 'Escape') { closeSearch(true); e.stopPropagation(); }
   else if (e.key === 'ArrowDown') { const b = document.querySelector('#kbSuggest .sg-item'); if (b) { e.preventDefault(); b.focus(); } }
 });
 document.addEventListener('keydown', (e) => {          // flèches dans la liste des propositions
@@ -1728,7 +1874,7 @@ document.addEventListener('keydown', (e) => {          // flèches dans la liste
   if (e.key === 'ArrowUp' && !n) { e.preventDefault(); $('#kbSearch').focus(); }
   else if (n && n.classList.contains('sg-item')) { e.preventDefault(); n.focus(); }
 });
-document.addEventListener('click', (e) => { if (!e.target.closest('.cv-search')) hideSuggest(); });
+document.addEventListener('click', (e) => { if (!e.target.closest('.cv-search')) { hideSuggest(); closeSearch(false); } });
 document.addEventListener('input', (e) => {             // recherche d'un champ dans la barre d'éléments (pas de nouveau rendu : on garde le focus)
   if (e.target.dataset && e.target.dataset.blk === 'search') { palSearch = e.target.value; filterPalette(); }
 });
@@ -1899,11 +2045,16 @@ function suggestHtml() {
       + (sp ? `<span class="sg-m">${esc(range(sp))}</span>` : '<span class="sg-m nodate">Sans date · ouvrir la fiche</span>') + '</button>').join('')
     + (hits.length > 8 ? `<div class="sg-more">${hits.length - 8} autre${hits.length - 8 > 1 ? 's' : ''} résultat${hits.length - 8 > 1 ? 's' : ''} : précisez la recherche</div>` : '');
 }
-function showSuggest() { const el = $('#kbSuggest'), h = meta.loaded ? suggestHtml() : ''; el.innerHTML = h; el.hidden = !h; }
+function showSuggest() {
+  const el = $('#kbSuggest'), h = meta.loaded ? suggestHtml() : ''; el.innerHTML = h; el.hidden = !h;
+  if (!h) return;
+  el.style.left = '0'; el.style.right = 'auto';
+  if (el.getBoundingClientRect().right > window.innerWidth - 8) { el.style.left = 'auto'; el.style.right = '0'; }
+}
 function hideSuggest() { $('#kbSuggest').hidden = true; }
 function goToRecord(id) {
   const r = records.find((x) => x.id === id); if (!r) return;
-  hideSuggest();
+  closeSearch(true);
   const sp = spanOf(r);
   if (!sp) { openModal(id); return; }
   let need;
@@ -1951,10 +2102,17 @@ document.addEventListener('mouseout', (e) => {
 document.addEventListener('dragstart', hidePop, true);
 document.addEventListener('click', hidePop, true);
 document.addEventListener('scroll', hidePop, true);
+/* barre d'outils : si les icônes (recherche, recharger, configurer) passent à la ligne, on libère la place du titre */
+function fitBar() {
+  const bar = document.querySelector('.kb-bar'), a = bar && bar.querySelector('.cv-actions'), t = $('#cvTools');
+  if (!a || !t) return;
+  bar.classList.remove('no-title');
+  if (a.offsetTop > t.offsetTop + 4) bar.classList.add('no-title');
+}
 let resizeT;
 window.addEventListener('resize', () => {
   clearTimeout(resizeT);
-  resizeT = setTimeout(() => { if (meta.loaded && cfg.mode === 'gantt' && ui.ganttView === 'calendar') renderBoard(); }, 150);
+  resizeT = setTimeout(() => { if (meta.loaded && cfg.mode === 'gantt' && ui.ganttView === 'calendar') renderBoard(); else fitBar(); }, 150);
 });
 
 /* ------------------------------------------------------------------ *
